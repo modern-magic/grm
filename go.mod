@@ -1,4 +1,4 @@
-module nrm
+module gonrm
 
 go 1.17
 

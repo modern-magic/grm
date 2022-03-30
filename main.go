@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"nrm/internal"
+	"gonrm/internal"
 	"os"
 )
 
@@ -49,6 +49,13 @@ func main() {
 		case arg == "ls":
 			internal.ShowList()
 			os.Exit(0)
+		case arg == "current":
+			internal.ShowCurrent()
+			os.Exit(0)
+		case arg == "use":
+			internal.SetUse(osArgs[1])
+			os.Exit(0)
 		}
 	}
+
 }

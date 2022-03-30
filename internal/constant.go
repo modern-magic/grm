@@ -23,7 +23,7 @@ func getSystemPreffix() string {
 }
 
 var (
-	Home     = "HOME"
+	Home     = "home"
 	Author   = "_author"
 	Registry = "registry"
 	Nrmrc    = path.Join(getSystemPreffix(), ".nrmrc")
