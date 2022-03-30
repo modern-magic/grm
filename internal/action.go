@@ -1,18 +1,61 @@
 package internal
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"math"
+	"strings"
 )
+
+type registryInner struct {
+	home     string
+	registry string
+}
+
+var npm = registryInner{
+	home:     "https://www.npmjs.org",
+	registry: "https://registry.npmjs.org/",
+}
+
+var yarn = registryInner{
+	home:     "https://yarnpkg.com",
+	registry: "https://registry.yarnpkg.com/",
+}
+
+var tencet = registryInner{
+	home:     "https://mirrors.cloud.tencent.com/npm/",
+	registry: "https://mirrors.cloud.tencent.com/npm/",
+}
+var cnpm = registryInner{
+	home:     "https://cnpmjs.org",
+	registry: "https://r.cnpmjs.org/",
+}
+
+var taobao = registryInner{
+	home:     "https://npmmirror.com",
+	registry: "https://registry.npmmirror.com/",
+}
+
+var npmMirror = registryInner{
+	home:     "https://skimdb.npmjs.com/",
+	registry: "https://skimdb.npmjs.com/registry/",
+}
+
+var registries = map[string]registryInner{
+	"npm":       npm,
+	"yarn":      yarn,
+	"tencet":    tencet,
+	"cnpm":      cnpm,
+	"taobao":    taobao,
+	"npmMirror": npmMirror,
+}
+
 
 type Actions interface {
 	ShowList()
 }
 
 func getCurrentRegisitry() string {
-	ReadFile(Npmrc)
-	return ""
+	return ReadFile(Npmrc)
 }
 
 func ShowList() {
@@ -20,28 +63,26 @@ func ShowList() {
 }
 
 func showList() {
-	getCurrentRegisitry()
-	getPresetRegistries()
-}
-
-type Registries struct {
-	Npm       RegistryInner `json:"npm"`
-	Yarn      RegistryInner `json:"yarn"`
-	Tencent   RegistryInner `json:"tencent"`
-	Cnpm      RegistryInner `json:"cnpm"`
-	Taobao    RegistryInner `json:"taobao"`
-	NpmMirror RegistryInner `json:"npmMirror"`
-}
-type RegistryInner struct {
-	Home     string `json:"home"`
-	Registry string `json:"registry"`
+	curRegistry := getCurrentRegisitry()
+	outLen := len(registries) + 3
+	for k, v := range registries {
+		reg := v.registry
+		pre := "  "
+		if curRegistry == reg {
+			pre = "* "
+		}
+		fmt.Print("\n", pre, k, " ", getDashLine(k, outLen), " ", reg)
+	}
 }
 
 func getPresetRegistries() {
-	presets, _ := ioutil.ReadFile("../registries.json")
+}
 
-	registries := &Registries{}
-	json.Unmarshal(presets, registries)
-	fmt.Printf("%+v\n", registries)
-
+func getDashLine(key string, length int) string {
+	final := math.Max(2, (float64(length) - float64(len(key))))
+	bar := make([]string, int(final))
+	for i := range bar {
+		bar[i] = "-"
+	}
+	return strings.Join(bar[:], "-")
 }
