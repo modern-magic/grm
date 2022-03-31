@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"math"
+	"os"
 	"sort"
 	"strings"
 )
@@ -54,6 +55,8 @@ type Actions interface {
 	ShowList()
 	SetUse()
 	ShowCurrent()
+	DelRegistry()
+	AddRegistry()
 }
 
 func getCurrentRegisitry() string {
@@ -72,6 +75,26 @@ func ShowList() {
 		}
 		fmt.Print("\n", pre, k, " ", getDashLine(k, outLen), " ", reg)
 	}
+}
+
+func AddRegistry(url string, name string) {
+	regInfo := RegistryInner{
+		home:     url,
+		registry: url,
+	}
+	WriteNrmFile(Nrmrc, regInfo, name)
+	fmt.Print("add registry url success")
+}
+
+func DelRegistry(name string) {
+	exist := getSectionExistInNrm(name)
+	if !exist {
+		fmt.Println("can't found alias", name, "please check it.")
+		os.Exit(1)
+	}
+	DelNrmRegistry(name)
+	fmt.Print("del", name, " success")
+
 }
 
 func SetUse(name string) {

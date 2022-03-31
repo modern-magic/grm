@@ -69,3 +69,31 @@ func WriteFile(path string, content RegistryInner) {
 	str := strings.Join(next, "\r\n")
 	ioutil.WriteFile(path, []byte(str), 0644)
 }
+
+func WriteNrmFile(path string, content RegistryInner, section string) {
+	cfg, _ := ini.Load(path)
+	ini.PrettyFormat = false
+	block, _ := cfg.NewSection(section)
+	block.Key(Home).SetValue(content.home)
+	block.Key(Registry).SetValue(content.registry)
+	cfg.SaveTo(path)
+}
+
+func DelNrmRegistry(section string) {
+	cfg, _ := ini.Load(Nrmrc)
+	ini.PrettyFormat = false
+	cfg.Section(section).Key(Home).SetValue("")
+	cfg.Section(section).Key(Registry).SetValue("")
+	cfg.DeleteSection(section)
+	cfg.SaveTo(Nrmrc)
+
+}
+
+func getSectionExistInNrm(section string) bool {
+	cfg, _ := ini.Load(Nrmrc)
+	_, err := cfg.GetSection(section)
+	if err != nil {
+		return false
+	}
+	return true
+}
