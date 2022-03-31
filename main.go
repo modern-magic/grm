@@ -34,10 +34,10 @@ func main() {
 	for _, arg := range osArgs {
 		switch {
 		case arg == "-h", arg == "--help", arg == "help":
-			fmt.Printf(helpText())
+			fmt.Printf(internal.AnsiColor.Color(internal.TipColor), helpText())
 			os.Exit(0)
 		case arg == "-v", arg == "--version":
-			fmt.Printf("gonrm %s \n", version)
+			fmt.Printf("gonrm: %s", version)
 			os.Exit(0)
 		case arg == "ls":
 			internal.ShowList()
