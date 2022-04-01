@@ -26,6 +26,7 @@ var (
 	Home     = "home"
 	Author   = "_author"
 	Registry = "registry"
+	Delete   = "delete"
 	Nrmrc    = path.Join(getSystemPreffix(), ".nrmrc")
 	Npmrc    = path.Join(getSystemPreffix(), ".npmrc")
 )

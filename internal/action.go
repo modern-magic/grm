@@ -3,139 +3,95 @@ package internal
 import (
 	"fmt"
 	"math"
-	"os"
 	"sort"
 	"strings"
 )
 
-type RegistryInner struct {
-	home     string
-	registry string
-}
-
-var npm = RegistryInner{
-	home:     "https://www.npmjs.org",
-	registry: "https://registry.npmjs.org/",
-}
-
-var yarn = RegistryInner{
-	home:     "https://yarnpkg.com",
-	registry: "https://registry.yarnpkg.com/",
-}
-
-var tencet = RegistryInner{
-	home:     "https://mirrors.cloud.tencent.com/npm/",
-	registry: "https://mirrors.cloud.tencent.com/npm/",
-}
-var cnpm = RegistryInner{
-	home:     "https://cnpmjs.org",
-	registry: "https://r.cnpmjs.org/",
-}
-
-var taobao = RegistryInner{
-	home:     "https://npmmirror.com",
-	registry: "https://registry.npmmirror.com/",
-}
-
-var npmMirror = RegistryInner{
-	home:     "https://skimdb.npmjs.com/",
-	registry: "https://skimdb.npmjs.com/registry/",
-}
-
-var registries = map[string]RegistryInner{
-	"npm":       npm,
-	"yarn":      yarn,
-	"tencet":    tencet,
-	"cnpm":      cnpm,
-	"taobao":    taobao,
-	"npmMirror": npmMirror,
-}
-
-type Actions interface {
-	ShowList()
-	SetUse()
-	ShowCurrent()
-	DelRegistry()
-	AddRegistry()
-}
-
 func getCurrentRegisitry() string {
-	return ReadFile(Npmrc)
+	return readNpmRegistry()
 }
 
-func ShowList() {
-	cur := getCurrentRegisitry()
-	getAllRegistries()
-	outLen := len(registries) + 3
-	for k, v := range registries {
-		reg := v.registry
-		pre := "  "
-		if cur == reg {
-			pre = "* "
+func ShowRegistries(registries *Registries) {
+
+	keys := registries.RegistriesKeys
+	source := registries.Registries
+	curRegistry := getCurrentRegisitry()
+	outLen := len(keys) + 3
+	for _, k := range keys {
+		prefix := "  "
+		registry := source[k].Registry
+		if curRegistry == registry {
+			prefix = "* "
 		}
-		fmt.Print("\n", pre, k, " ", getDashLine(k, outLen), " ", reg)
+		fmt.Print("\n", prefix, k, " ", getDashLine(k, outLen), " ", registry)
 	}
+
 }
 
-func AddRegistry(url string, name string) {
-	regInfo := RegistryInner{
-		home:     url,
-		registry: url,
-	}
-	WriteNrmFile(Nrmrc, regInfo, name)
-	fmt.Print("add registry url success")
-}
+func SetUsageRegistry(osArgs []string, registries *Registries) {
 
-func DelRegistry(name string) {
-	exist := getSectionExistInNrm(name)
+	keys := registries.RegistriesKeys
+	name := ""
+	// if user don't set other alias we will use npm registry as default.
+	if len(osArgs) == 0 {
+		name = "npm"
+	} else {
+		name = osArgs[0]
+	}
+	exist := in(name, keys)
 	if !exist {
-		fmt.Println("can't found alias", name, "please check it.")
-		os.Exit(1)
-	}
-	DelNrmRegistry(name)
-	fmt.Print("del", name, " success")
-
-}
-
-func SetUse(name string) {
-	getAllRegistries()
-	alias := make([]string, 0)
-	for k := range registries {
-		alias = append(alias, k)
-	}
-	exists := in(name, alias)
-	if !exists {
+		fmt.Printf(AnsiColor.Color(DangerColor), " can't found registry please check it exist.")
 		return
 	}
-	registry := registries[name]
-	WriteFile(Npmrc, registry)
+	meta := registries.Registries[name]
+	writeNpmRegistry(meta)
 	fmt.Print("use ", name, " success!")
 }
 
-func ShowCurrent() {
-	cur := getCurrentRegisitry()
-	getAllRegistries()
-	alias := make([]string, 0)
-	for _, v := range registries {
-		alias = append(alias, v.registry)
-	}
-	exist := in(cur, alias)
-	if exist {
-		fmt.Print("you are using url: ", cur)
-		return
-	}
-	fmt.Print("can't fount alias")
+func ShowCurrentRegistry() {
+	curRegistry := getCurrentRegisitry()
+	fmt.Printf("you are using:\n")
+	fmt.Printf(AnsiColor.Color(TipColor), curRegistry)
 }
 
-func getAllRegistries() {
-	all := ReadAllFile(Nrmrc)
-	for _, v := range all {
-		inner := RegistryInner{
-			home:     v.path,
-			registry: v.path,
-		}
-		registries[v.name] = inner
+func AddRegistry(osArgs []string) {
+	name := ""
+	home := ""
+	registry := ""
+	if len(osArgs) <= 1 {
+		fmt.Printf(AnsiColor.Color(DangerColor), "name and registry url is must")
+		return
 	}
+	if len(osArgs) >= 3 {
+		home = osArgs[2]
+	}
+
+	name = osArgs[0]
+	registry = osArgs[1]
+
+	meta := RegistryMeta{
+		Home:     home,
+		Registry: registry,
+	}
+
+	writeNrmRegistries(meta, name)
+	fmt.Printf(AnsiColor.Color(TipColor), "add registry url success")
+}
+
+func DelRegistry(osArgs []string, nrmKeys []string) {
+	if len(osArgs) == 0 {
+		return
+	}
+	name := osArgs[0]
+
+	exist := in(name, nrmKeys)
+	if !exist {
+		fmt.Println("can't found alias", name, "please check it.")
+		return
+	}
+	writeNrmRegistries(RegistryMeta{}, name, Delete)
+	fmt.Printf("del sucess:\n")
+	fmt.Printf(AnsiColor.Color(TipColor), name)
 }
 
 func getDashLine(key string, length int) string {

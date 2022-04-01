@@ -22,7 +22,7 @@ Commands:
   ls                                      List all the registries
   current                                 Show current registry name
   use <registry>                          Change registry to registry
-  add <registry> <url> [home]             Add one custom registry
+  add <name> <registry> [home]             Add one custom registry
   del <name>                              Delete one custom registry by alias
   help                                    Print this help
 `
@@ -31,6 +31,8 @@ Commands:
 
 func main() {
 	osArgs := os.Args[1:]
+	registries := internal.Regis
+	registries.InitlizeRegistries()
 	for _, arg := range osArgs {
 		switch {
 		case arg == "-h", arg == "--help", arg == "help":
@@ -40,19 +42,19 @@ func main() {
 			fmt.Printf("gonrm: %s", version)
 			os.Exit(0)
 		case arg == "ls":
-			internal.ShowList()
+			internal.ShowRegistries(registries)
 			os.Exit(0)
 		case arg == "current":
-			internal.ShowCurrent()
+			internal.ShowCurrentRegistry()
 			os.Exit(0)
 		case arg == "use":
-			internal.SetUse(osArgs[1])
+			internal.SetUsageRegistry(osArgs[1:], registries)
 			os.Exit(0)
 		case arg == "add":
-			internal.AddRegistry(osArgs[1], osArgs[2])
+			internal.AddRegistry(osArgs[1:])
 			os.Exit(0)
 		case arg == "del":
-			internal.DelRegistry(osArgs[1])
+			internal.DelRegistry(osArgs[1:], registries.NrmRegistriesKeys)
 			os.Exit(0)
 		}
 	}
