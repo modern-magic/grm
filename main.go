@@ -34,29 +34,24 @@ func main() {
 	registries := internal.Regis
 	registries.InitlizeRegistries()
 	for _, arg := range osArgs {
-		switch {
-		case arg == "-h", arg == "--help", arg == "help":
+		switch arg {
+		case "-h", "--help", "help":
 			fmt.Printf(internal.AnsiColor.Color(internal.TipColor), helpText())
-			os.Exit(0)
-		case arg == "-v", arg == "--version":
+		case "-v", "--version", "version":
 			fmt.Printf("gonrm: %s", version)
-			os.Exit(0)
-		case arg == "ls":
+		case "ls":
 			internal.ShowRegistries(registries)
-			os.Exit(0)
-		case arg == "current":
+		case "current":
 			internal.ShowCurrentRegistry()
-			os.Exit(0)
-		case arg == "use":
+		case "use":
 			internal.SetUsageRegistry(osArgs[1:], registries)
-			os.Exit(0)
-		case arg == "add":
+		case "add":
 			internal.AddRegistry(osArgs[1:])
-			os.Exit(0)
-		case arg == "del":
+		case "del":
 			internal.DelRegistry(osArgs[1:], registries.NrmRegistriesKeys)
-			os.Exit(0)
 		}
+
 	}
+	os.Exit(0)
 
 }

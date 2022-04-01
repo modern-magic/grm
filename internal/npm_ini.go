@@ -52,22 +52,25 @@ func readNpmRegistry() string {
 	return cfg.Section("").Key(Registry).Value()
 }
 
-// ....
+/*
+ * because go-ini can't compatible wtih npm-ini format, so we should do this by weself.
+ */
 
 func writeNpmRegistry(r RegistryMeta) {
-	cfg, _ := ini.LoadSources(ini.LoadOptions{KeyValueDelimiterOnWrite: ":"}, Npmrc)
-	ini.PrettyFormat = false
-	cfg.Section("").Key(Home).SetValue(r.Home)
-	cfg.Section("").Key(Registry).SetValue(r.Registry)
-	cfg.SaveTo(Npmrc)
-	buf, _ := ioutil.ReadFile(Npmrc)
-	arr := strings.Split(string(buf), "\r\n")
+	buf, err := ioutil.ReadFile(Npmrc)
+	if err != nil {
+		return
+	}
+	bufArr := strings.Split(string(buf), eol())
 	next := make([]string, 0)
-	for _, k := range arr {
-		k = strings.Replace(k, "registry:", "registry=", -1)
-		k = strings.Replace(k, "home:", "home=", -1)
+	for _, k := range bufArr {
+		if strings.Index(k, "registry=") == 0 || strings.Index(k, "home=") == 0 {
+			tmp := strings.Split(k, "=")
+			tmp[1] = r.Registry
+			k = strings.Join(tmp, "=")
+		}
 		next = append(next, k)
 	}
-	str := strings.Join(next, "\r\n")
+	str := strings.Join(next, eol())
 	ioutil.WriteFile(Npmrc, []byte(str), 0644)
 }

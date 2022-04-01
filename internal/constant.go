@@ -10,6 +10,13 @@ func isWin() bool {
 	return runtime.GOOS == "windows"
 }
 
+func eol() string {
+	if isWin() {
+		return "\r\n"
+	}
+	return "\n"
+}
+
 func getSystemEnv(key string) string {
 	return os.Getenv(key)
 }

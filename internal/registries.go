@@ -47,11 +47,6 @@ type Registries struct {
 	NrmRegistriesKeys []string
 }
 
-// func (r *Registries) SetRegistries(source RegistryMeta, key string) {
-// 	r.Registries[key] = source
-// 	r.RegistriesKeys = append(r.RegistriesKeys, key)
-// }
-
 func (r *Registries) InitlizeRegistries() {
 	for idx, v := range presetKeys {
 		r.Registries[v] = presetRegistries[idx]
