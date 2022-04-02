@@ -17,7 +17,7 @@ $ go install
 ### Usage
 
 ```shell
-Usage: gonrm [options] [command]
+Usage: grm [options] [command]
 
 Options:
   -v, --version                           output the version number
