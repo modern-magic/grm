@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	"gonrm/internal"
+	"grm/internal"
 	"os"
 )
 
 var (
-	version = "V0.0.0"
+	version = "V0.0.1"
 )
 
 var helpText = func() string {
