@@ -1,4 +1,4 @@
-module grm
+module github.com/XeryYue/grm
 
 go 1.17
 

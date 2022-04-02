@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"grm/internal"
 	"os"
+
+	"github.com/XeryYue/grm/internal"
 )
 
 var (
-	version = "V0.0.1"
+	version = "V0.1.0"
 )
 
 var helpText = func() string {
