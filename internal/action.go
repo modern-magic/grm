@@ -94,6 +94,52 @@ func DelRegistry(osArgs []string, nrmKeys []string) {
 	fmt.Printf(AnsiColor.Color(TipColor), name)
 }
 
+func CurlRegistry(osArgs []string, registries *Registries) {
+	if len(osArgs) == 0 {
+		curlAllRegistry(registries)
+		return
+	}
+	keys := registries.RegistriesKeys
+	name := osArgs[0]
+	exist := in(name, keys)
+	if !exist {
+		fmt.Printf(AnsiColor.Color(DangerColor), "please check alias exist.")
+		return
+	}
+	uri := registries.Registries[name].Registry
+	ctx := curlRegistryImpl(uri)
+	generatorCurlMessage(ctx, name)
+}
+
+func curlAllRegistry(registries *Registries) {
+
+	keys := registries.RegistriesKeys
+	source := registries.Registries
+	for _, k := range keys {
+		uri := source[k].Registry
+		ctx := curlRegistryImpl(uri)
+		generatorCurlMessage(ctx, k)
+	}
+
+}
+
+func generatorCurlMessage(ctx FetchState, name string) {
+	tout := ctx.isTimeout
+	prefix := ""
+	if tout {
+		prefix = "fetch" + name + " " + "timeout"
+	} else {
+		prefix = "fetch " + name + " " + fmt.Sprintf("%v", ctx.time) + "s"
+	}
+
+	fmt.Println(prefix, "state:", ctx.status)
+
+}
+
+func curlRegistryImpl(uri string) FetchState {
+	return fetch(uri)
+}
+
 func getDashLine(key string, length int) string {
 	final := math.Max(2, (float64(length) - float64(len(key))))
 	bar := make([]string, int(final))

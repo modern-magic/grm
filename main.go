@@ -23,7 +23,8 @@ Commands:
   ls                                      List all the registries
   current                                 Show current registry name
   use <registry>                          Change registry to registry
-  add <name> <registry> [home]             Add one custom registry
+  test <name>                             Test response time for specific or all registries
+  add <name> <registry> [home]            Add one custom registry
   del <name>                              Delete one custom registry by alias
   help                                    Print this help
 `
@@ -50,9 +51,10 @@ func main() {
 			internal.AddRegistry(osArgs[1:])
 		case "del":
 			internal.DelRegistry(osArgs[1:], registries.NrmRegistriesKeys)
+		case "test":
+			internal.CurlRegistry(osArgs[1:], registries)
 		}
 
 	}
 	os.Exit(0)
-
 }
