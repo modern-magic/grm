@@ -38,7 +38,7 @@ func main() {
 		case "-h", "--help", "help":
 			fmt.Printf(internal.AnsiColor.Color(internal.TipColor), helpText())
 		case "-v", "--version", "version":
-			fmt.Printf("gonrm: %s", version)
+			fmt.Printf("grm: %s", version)
 		case "ls":
 			internal.ShowRegistries(registries)
 		case "current":
