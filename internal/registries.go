@@ -21,7 +21,7 @@ var (
 		Registry: "https://repo.huaweicloud.com/repository/npm/",
 	}
 
-	tencet = RegistryMeta{
+	tencent = RegistryMeta{
 		Home:     "https://mirrors.cloud.tencent.com/npm/",
 		Registry: "https://mirrors.cloud.tencent.com/npm/",
 	}
@@ -43,10 +43,10 @@ var (
 )
 
 var presetKeys = []string{
-	"npm", "yarn", "huawei", "tencet", "cnpm", "taobao", "npmMirror",
+	"npm", "yarn", "huawei", "tencent", "cnpm", "taobao", "npmMirror",
 }
 var presetRegistries = []RegistryMeta{
-	npm, yarn, huawei, tencet, cnpm, taobao, npmMirror,
+	npm, yarn, huawei, tencent, cnpm, taobao, npmMirror,
 }
 
 type Registries struct {
