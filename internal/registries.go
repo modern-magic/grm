@@ -5,34 +5,37 @@ type RegistryMeta struct {
 	Registry string
 }
 
-var npm = RegistryMeta{
-	Home:     "https://www.npmjs.org",
-	Registry: "https://registry.npmjs.org/",
-}
+var (
+	npm = RegistryMeta{
+		Home:     "https://www.npmjs.org",
+		Registry: "https://registry.npmjs.org/",
+	}
 
-var yarn = RegistryMeta{
-	Home:     "https://yarnpkg.com",
-	Registry: "https://registry.yarnpkg.com/",
-}
+	yarn = RegistryMeta{
+		Home:     "https://yarnpkg.com",
+		Registry: "https://registry.yarnpkg.com/",
+	}
 
-var tencet = RegistryMeta{
-	Home:     "https://mirrors.cloud.tencent.com/npm/",
-	Registry: "https://mirrors.cloud.tencent.com/npm/",
-}
-var cnpm = RegistryMeta{
-	Home:     "https://cnpmjs.org",
-	Registry: "https://r.cnpmjs.org/",
-}
+	tencet = RegistryMeta{
+		Home:     "https://mirrors.cloud.tencent.com/npm/",
+		Registry: "https://mirrors.cloud.tencent.com/npm/",
+	}
 
-var taobao = RegistryMeta{
-	Home:     "https://npmmirror.com",
-	Registry: "https://registry.npmmirror.com/",
-}
+	cnpm = RegistryMeta{
+		Home:     "https://cnpmjs.org",
+		Registry: "https://r.cnpmjs.org/",
+	}
 
-var npmMirror = RegistryMeta{
-	Home:     "https://skimdb.npmjs.com/",
-	Registry: "https://skimdb.npmjs.com/Registry/",
-}
+	taobao = RegistryMeta{
+		Home:     "https://npmmirror.com",
+		Registry: "https://registry.npmmirror.com/",
+	}
+	
+	npmMirror = RegistryMeta{
+		Home:     "https://skimdb.npmjs.com/",
+		Registry: "https://skimdb.npmjs.com/Registry/",
+	}
+)
 
 var presetKeys = []string{
 	"npm", "yarn", "tencet", "cnpm", "taobao", "npmMirror",
