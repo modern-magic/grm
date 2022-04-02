@@ -1,16 +1,18 @@
-# GoNrm
+# Grm
+
+[![Go Reference](https://pkg.go.dev/badge/github.com/XeryYue/grm.svg)](https://pkg.go.dev/github.com/XeryYue/grm)
+
+A npm registry manger.
+
+Use smaller dependencies than [nrm](https://github.com/Pana/nrm).
 
 ### Install
 
+- Using go:
+
 ```shell
 
-$ git clone git@github.com:XeryYue/go-nrm.git
-
-$ go get
-
-$ go build
-
-$ go install
+$ go install github.com/XeryYue/grm@latest
 
 ```
 
@@ -32,3 +34,13 @@ Commands:
   help                                    Print this help
 
 ```
+
+### Q & A
+
+> Why new nrm?
+
+- Installing `nrm` is too slow, and `grm` can be fast.
+
+> Why not so comprehensive
+
+- Because we are only source manager.
