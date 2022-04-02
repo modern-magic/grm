@@ -16,6 +16,11 @@ var (
 		Registry: "https://registry.yarnpkg.com/",
 	}
 
+	huawei = RegistryMeta{
+		Home:     "https://repo.huaweicloud.com/repository/npm/",
+		Registry: "https://repo.huaweicloud.com/repository/npm/",
+	}
+
 	tencet = RegistryMeta{
 		Home:     "https://mirrors.cloud.tencent.com/npm/",
 		Registry: "https://mirrors.cloud.tencent.com/npm/",
@@ -30,7 +35,7 @@ var (
 		Home:     "https://npmmirror.com",
 		Registry: "https://registry.npmmirror.com/",
 	}
-	
+
 	npmMirror = RegistryMeta{
 		Home:     "https://skimdb.npmjs.com/",
 		Registry: "https://skimdb.npmjs.com/Registry/",
@@ -38,10 +43,10 @@ var (
 )
 
 var presetKeys = []string{
-	"npm", "yarn", "tencet", "cnpm", "taobao", "npmMirror",
+	"npm", "yarn", "huawei", "tencet", "cnpm", "taobao", "npmMirror",
 }
 var presetRegistries = []RegistryMeta{
-	npm, yarn, tencet, cnpm, taobao, npmMirror,
+	npm, yarn, huawei, tencet, cnpm, taobao, npmMirror,
 }
 
 type Registries struct {
