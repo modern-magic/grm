@@ -8,13 +8,15 @@ Use smaller dependencies than [nrm](https://github.com/Pana/nrm).
 
 ### Install
 
-- Using go:
+-   Using [Go](https://golang.org/):
 
 ```shell
 
 $ go install github.com/XeryYue/grm@latest
 
 ```
+
+Or download a [binary package](https://github.com/XeryYue/grm/releases/latest).
 
 ### Usage
 
@@ -39,8 +41,8 @@ Commands:
 
 > Why new nrm?
 
-- Installing `nrm` is too slow, and `grm` can be fast.
+-   Installing `nrm` is too slow, and `grm` can be fast.
 
 > Why not so comprehensive
 
-- Because we are only source manager.
+-   Because we are only source manager.
