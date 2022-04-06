@@ -13,7 +13,7 @@ var (
 
 var helpText = func() string {
 
-	return `Usage: gonrm [options] [command]
+	return `Usage: grm [options] [command]
 
 Options:
   -v, --version                           output the version number
