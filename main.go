@@ -13,7 +13,7 @@ var (
 
 var helpText = func() string {
 
-	return `Usage: gonrm [options] [command]
+	return `Usage: grm [options] [command]
 
 Options:
   -v, --version                           output the version number
@@ -35,6 +35,11 @@ func main() {
 	osArgs := os.Args[1:]
 	registries := internal.Regis
 	registries.InitlizeRegistries()
+	if len(osArgs) == 0 {
+		fmt.Printf(internal.AnsiColor.Color(internal.TipColor), helpText())
+		return
+	}
+
 	for _, arg := range osArgs {
 		switch arg {
 		case "-h", "--help", "help":
@@ -54,7 +59,6 @@ func main() {
 		case "test":
 			internal.CurlRegistry(osArgs[1:], registries)
 		}
-
 	}
 	os.Exit(0)
 }
