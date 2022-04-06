@@ -14,17 +14,17 @@ type FetchState struct {
 func fetch(uri string) FetchState {
 	start := time.Now()
 	resp, err := http.Get(uri)
-	isTimeout := false
-	status := resp.Status
 	if err != nil {
-		isTimeout = true
+		return FetchState{
+			isTimeout: true,
+		}
 	}
-	tc := time.Since(start).Seconds()
-	meta := FetchState{
-		status:    status,
-		isTimeout: isTimeout,
-		time:      tc,
+	defer resp.Body.Close()
+
+	return FetchState{
+		status:    resp.Status,
+		time:      float64(time.Since(start).Seconds()),
+		isTimeout: false,
 	}
-	return meta
 
 }
