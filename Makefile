@@ -20,21 +20,21 @@ platform-darwin-arm64:
 compress-all:	compress-windows	compress-windows-32	compress-windows-arm64	compress-darwin	compress-darwin-arm64
 
 compress-windows:	platform-windows
-	tar -zcvf pkg/grm-windows-64/grm-windows-64.tar.gz	pkg/grm-windows-64/grm.exe
-	rm	-f	pkg/grm-windows-64/grm.exe
+	tar -zcvf pkg/grm-windows-64.tar.gz	pkg/grm-windows-64/grm.exe
+	rm	-rf	pkg/grm-windows-64
 
 compress-windows-32:	platform-windows-32
-	tar -zcvf pkg/grm-windows-32/grm-windows-32.tar.gz	pkg/grm-windows-32/grm.exe
-	rm -f	pkg/grm-windows-32/grm.exe
+	tar -zcvf pkg/grm-windows-32.tar.gz	pkg/grm-windows-32/grm.exe
+	rm -rf	pkg/grm-windows-32
 
 compress-windows-arm64:	platform-windows-arm64
-	tar -zcvf pkg/grm-windows-arm64/grm-windows-arm64.tar.gz	pkg/grm-windows-arm64/grm.exe
-	rm -f	pkg/grm-windows-arm64/grm.exe
+	tar -zcvf pkg/grm-windows-arm64.tar.gz	pkg/grm-windows-arm64/grm.exe
+	rm -rf	pkg/grm-windows-arm64
 
 compress-darwin:	platform-darwin
-	tar -zcvf pkg/grm-darwin-64/grm-darwin-64.tar.gz	pkg/grm-darwin-64/grm
-	rm	-f	pkg/grm-darwin-64/grm
+	tar -zcvf pkg/grm-darwin-64.tar.gz	pkg/grm-darwin-64/grm
+	rm	-rf	pkg/grm-darwin-64
 
 compress-darwin-arm64:	platform-darwin-arm64
-	tar -zcvf pkg/grm-darwin-arm64/grm-darwin-arm64.tar.gz	pkg/grm-darwin-arm64/grm
-	rm	-f	pkg/grm-darwin-arm64/grm
+	tar -zcvf pkg/grm-darwin-arm64.tar.gz	pkg/grm-darwin-arm64/grm
+	rm	-rf	pkg/grm-darwin-arm64
