@@ -123,7 +123,7 @@ func curlAllRegistry(registries *Registries) {
 
 }
 
-func generatorCurlMessage(ctx FetchState, name string) {
+func generatorCurlMessage(ctx FetchContext, name string) {
 	tout := ctx.isTimeout
 	prefix := ""
 	if tout {
@@ -136,7 +136,7 @@ func generatorCurlMessage(ctx FetchState, name string) {
 
 }
 
-func curlRegistryImpl(uri string) FetchState {
+func curlRegistryImpl(uri string) FetchContext {
 	return fetch(uri)
 }
 
