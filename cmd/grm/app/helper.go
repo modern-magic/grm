@@ -31,7 +31,7 @@ Commands:
 
 }
 
-func Main() {
+func Run() {
 	osArgs := os.Args[1:]
 	registries := internal.Regis
 	registries.InitlizeRegistries()
