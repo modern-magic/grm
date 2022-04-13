@@ -49,7 +49,7 @@ Commands:
 
 ## All Contributors
 
-Thanks to the following friends for their contributions to Fect:
+Thanks to the following friends for their contributions to Grm:
 
 <a href="https://github.com/xeryYue/grm/graphs/contributors">
   <img src="https://opencollective.com/grm/contributors.svg?width=890&button=false" alt="contributors">
