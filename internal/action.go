@@ -90,7 +90,7 @@ func DelRegistry(osArgs []string, nrmKeys []string) {
 		return
 	}
 	writeNrmRegistries(RegistryMeta{}, name, Delete)
-	fmt.Printf("del sucess:\n")
+	fmt.Printf("del success:\n")
 	fmt.Printf(AnsiColor.Color(TipColor), name)
 }
 
