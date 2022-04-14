@@ -53,7 +53,7 @@ func readNpmRegistry() string {
 }
 
 /*
- * because go-ini can't compatible wtih npm-ini format, so we should do this by weself.
+ * because go-ini can't compatible with npm-ini format, so we should do this by weself.
  */
 
 func writeNpmRegistry(r RegistryMeta) {
