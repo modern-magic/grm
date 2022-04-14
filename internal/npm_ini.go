@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"fmt"
 	"io/ioutil"
 	"strings"
 
@@ -44,7 +45,12 @@ func writeNrmRegistries(r RegistryMeta, section string, args ...string) {
 	if len(args) == 1 && args[0] == Delete {
 		cfg.DeleteSection(section)
 	}
-	cfg.SaveTo(Nrmrc)
+	err := cfg.SaveTo(Nrmrc)
+	if err != nil {
+		fmt.Println("[Grm:] Error with: ", err)
+		return
+	}
+
 }
 
 func readNpmRegistry() string {
@@ -72,5 +78,9 @@ func writeNpmRegistry(r RegistryMeta) {
 		next = append(next, k)
 	}
 	str := strings.Join(next, eol())
-	ioutil.WriteFile(Npmrc, []byte(str), 0644)
+	err = ioutil.WriteFile(Npmrc, []byte(str), 0644)
+	if err != nil {
+		fmt.Println("[Grm:] Error with: ", err)
+		return
+	}
 }
