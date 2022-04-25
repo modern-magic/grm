@@ -1,0 +1,6 @@
+project_name: grm
+brews:
+  - tap:
+      owner: modern-magic
+      name: homebrew-tap
+    homepage: 'https://github.com/modern-magic/grm'
