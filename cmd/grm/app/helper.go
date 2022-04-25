@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	version = "V0.3.0"
+	version = "V0.4.0"
 )
 
 var helpText = func() string {
