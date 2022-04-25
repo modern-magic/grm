@@ -8,9 +8,17 @@ Use smaller dependencies than [nrm](https://github.com/Pana/nrm).
 
 ## Install
 
+- Using [homebrew](https://brew.sh/)
+
+```bash
+
+$ brew install modern-magic/tap/grm
+
+```
+
 - Using [Go](https://golang.org/):
 
-```shell
+```bash
 
 $ go install github.com/XeryYue/grm@latest
 
