@@ -1,4 +1,4 @@
-module github.com/XeryYue/grm
+module github.com/modern-magic/grm
 
 go 1.17
 

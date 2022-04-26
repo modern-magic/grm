@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/XeryYue/grm/internal"
+	"github.com/modern-magic/grm/internal"
 )
 
 var (

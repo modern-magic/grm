@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/XeryYue/grm/cmd/grm/app"
+	"github.com/modern-magic/grm/cmd/grm/app"
 )
 
 func main() {

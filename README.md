@@ -1,6 +1,6 @@
 # Grm
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/XeryYue/grm.svg)](https://pkg.go.dev/github.com/XeryYue/grm)
+[![Go Reference](https://pkg.go.dev/badge/github.com/modern-magic/grm.svg)](https://pkg.go.dev/github.com/modern-magic/grm)
 
 A npm registry manger.
 
@@ -20,11 +20,11 @@ $ brew install modern-magic/tap/grm
 
 ```bash
 
-$ go install github.com/XeryYue/grm@latest
+$ go install github.com/modern-magic/grm@latest
 
 ```
 
-Or download a [binary package](https://github.com/XeryYue/grm/releases/latest).
+Or download a [binary package](https://github.com/modern-magic/grm/releases/latest).
 
 ## Usage
 
@@ -59,7 +59,7 @@ Commands:
 
 Thanks to the following friends for their contributions to Grm:
 
-<a href="https://github.com/xeryYue/grm/graphs/contributors">
+<a href="https://github.com/modern-magic/grm/graphs/contributors">
   <img src="https://opencollective.com/grm/contributors.svg?width=890&button=false" alt="contributors">
 </a>
 
