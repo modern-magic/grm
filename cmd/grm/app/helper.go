@@ -5,15 +5,14 @@ import (
 	"os"
 
 	"github.com/modern-magic/grm/internal"
+	"github.com/modern-magic/grm/internal/logger"
 )
 
 var (
 	version = "V0.4.0"
 )
 
-var helpText = func() string {
-
-	return `Usage: grm [options] [command]
+var helperInfo = `Usage: Grm [options] [command]
 
 Options:
   -v, --version                           output the version number
@@ -29,23 +28,27 @@ Commands:
   help                                    Print this help
 `
 
-}
-
 func Run() {
 	osArgs := os.Args[1:]
 	registries := internal.Regis
 	registries.InitlizeRegistries()
 	if len(osArgs) == 0 {
-		fmt.Printf(internal.AnsiColor.Color(internal.TipColor), helpText())
+		logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
+			return fmt.Sprintf("%s%s%s", c.Cyan, helperInfo, c.Reset)
+		})
 		return
 	}
 
 	for _, arg := range osArgs {
 		switch arg {
 		case "-h", "--help", "help":
-			fmt.Printf(internal.AnsiColor.Color(internal.TipColor), helpText())
+			logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
+				return fmt.Sprintf("%s%s%s", c.Cyan, helperInfo, c.Reset)
+			})
 		case "-v", "--version", "version":
-			fmt.Printf("grm: %s", version)
+			logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
+				return fmt.Sprintf("%s[Grm]: %s%s", c.Green, version, c.Reset)
+			})
 		case "ls":
 			internal.ShowRegistries(registries)
 		case "current":
@@ -60,5 +63,5 @@ func Run() {
 			internal.CurlRegistry(osArgs[1:], registries)
 		}
 	}
-	os.Exit(0)
+
 }

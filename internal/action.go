@@ -3,8 +3,11 @@ package internal
 import (
 	"fmt"
 	"math"
+	"os"
 	"sort"
 	"strings"
+
+	"github.com/modern-magic/grm/internal/logger"
 )
 
 func getCurrentRegisitry() string {
@@ -40,7 +43,9 @@ func SetUsageRegistry(osArgs []string, registries *Registries) {
 	}
 	exist := in(name, keys)
 	if !exist {
-		fmt.Printf(AnsiColor.Color(DangerColor), " can't found registry please check it exist.")
+		logger.PrintTextWithColor(os.Stderr, func(c logger.Colors) string {
+			return fmt.Sprintf("%s[Grm:]%s%s", c.Red, "can't found registry"+name+"please check it exist.", c.Reset)
+		})
 		return
 	}
 	meta := registries.Registries[name]
@@ -50,8 +55,9 @@ func SetUsageRegistry(osArgs []string, registries *Registries) {
 
 func ShowCurrentRegistry() {
 	curRegistry := getCurrentRegisitry()
-	fmt.Printf("you are using:\n")
-	fmt.Printf(AnsiColor.Color(TipColor), curRegistry)
+	logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
+		return fmt.Sprintf("%s[Grm]: You are using:\n%s%s", c.Blue, curRegistry, c.Reset)
+	})
 }
 
 func AddRegistry(osArgs []string) {
@@ -59,7 +65,9 @@ func AddRegistry(osArgs []string) {
 	home := ""
 	registry := ""
 	if len(osArgs) <= 1 {
-		fmt.Printf(AnsiColor.Color(DangerColor), "name and registry url is must")
+		logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
+			return fmt.Sprintf("%s[Grm]: name and registry uri is must%s", c.Red, c.Reset)
+		})
 		return
 	}
 	if len(osArgs) >= 3 {
@@ -75,7 +83,9 @@ func AddRegistry(osArgs []string) {
 	}
 
 	writeNrmRegistries(meta, name)
-	fmt.Printf(AnsiColor.Color(TipColor), "add registry url success")
+	logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
+		return fmt.Sprintf("%s[Grm]: add registry url success!", c.Green)
+	})
 }
 
 func DelRegistry(osArgs []string, nrmKeys []string) {
@@ -86,12 +96,15 @@ func DelRegistry(osArgs []string, nrmKeys []string) {
 
 	exist := in(name, nrmKeys)
 	if !exist {
-		fmt.Println("can't found alias", name, "please check it.")
+		logger.PrintTextWithColor(os.Stderr, func(c logger.Colors) string {
+			return fmt.Sprintf("%s[Grm]:can't found alias %s%s", c.Red, name, c.Reset)
+		})
 		return
 	}
 	writeNrmRegistries(RegistryMeta{}, name, Delete)
-	fmt.Printf("del success:\n")
-	fmt.Printf(AnsiColor.Color(TipColor), name)
+	logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
+		return fmt.Sprintf("%s[Grm]: del registry %s success!%s", c.Green, name, c.Reset)
+	})
 }
 
 func CurlRegistry(osArgs []string, registries *Registries) {
@@ -103,7 +116,9 @@ func CurlRegistry(osArgs []string, registries *Registries) {
 	name := osArgs[0]
 	exist := in(name, keys)
 	if !exist {
-		fmt.Printf(AnsiColor.Color(DangerColor), "please check alias exist.")
+		logger.PrintTextWithColor(os.Stderr, func(c logger.Colors) string {
+			return fmt.Sprintf("%s[Grm]: please check alias exist%s", c.Red, c.Reset)
+		})
 		return
 	}
 	uri := registries.Registries[name].Registry
