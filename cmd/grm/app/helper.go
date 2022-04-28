@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	version = "V0.4.0"
+	version = "V0.4.1"
 )
 
 var helperInfo = `Usage: Grm [options] [command]
