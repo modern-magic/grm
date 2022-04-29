@@ -1,6 +1,9 @@
 package logger
 
-import "os"
+import (
+	"fmt"
+	"os"
+)
 
 type Colors struct {
 	Reset string
@@ -30,17 +33,31 @@ var TerminalColors = Colors{
 	Yellow:  "\033[33m",
 }
 
-type LogLevel int8
-
-const (
-	LevelNone LogLevel = iota
-	LevelInfo
-	LevelWarning
-	LevelError
-	LevelSilent
-)
-
 func PrintTextWithColor(file *os.File, callback func(Colors) string) {
 	colors := TerminalColors
 	writeStringWithColor(file, callback(colors))
+}
+
+func PrintInfo(text string) {
+	PrintTextWithColor(os.Stdout, func(c Colors) string {
+		return fmt.Sprintf("%s%s%s", c.Blue, text, c.Reset)
+	})
+}
+
+func PrintError(text string) {
+	PrintTextWithColor(os.Stderr, func(c Colors) string {
+		return fmt.Sprintf("%s%s%s", c.Red, text, c.Reset)
+	})
+}
+
+func PrintSuccess(text string) {
+	PrintTextWithColor(os.Stdout, func(c Colors) string {
+		return fmt.Sprintf("%s%s%s", c.Green, text, c.Reset)
+	})
+}
+
+func PrintWarn(text string) {
+	PrintTextWithColor(os.Stdout, func(c Colors) string {
+		return fmt.Sprintf("%s%s%s", c.Yellow, text, c.Reset)
+	})
 }

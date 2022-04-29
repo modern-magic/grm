@@ -1,4 +1,4 @@
-package app
+package main
 
 import (
 	"fmt"
@@ -6,10 +6,6 @@ import (
 
 	"github.com/modern-magic/grm/internal"
 	"github.com/modern-magic/grm/internal/logger"
-)
-
-var (
-	version = "V0.4.1"
 )
 
 var helperInfo = `Usage: Grm [options] [command]
@@ -47,7 +43,7 @@ func Run() {
 			})
 		case "-v", "--version", "version":
 			logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
-				return fmt.Sprintf("%s[Grm]: %s%s", c.Green, version, c.Reset)
+				return fmt.Sprintf("%s[Grm]: %s%s", c.Green, grmVersion, c.Reset)
 			})
 		case "ls":
 			internal.ShowRegistries(registries)
