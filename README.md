@@ -20,7 +20,7 @@ $ brew install modern-magic/tap/grm
 
 ```bash
 
-$ go install github.com/modern-magic/grm@latest
+$ go install github.com/modern-magic/grm/cmd/grm@latest
 
 ```
 

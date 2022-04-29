@@ -6,25 +6,25 @@ import (
 )
 
 type FetchContext struct {
-	status    string
-	time      float64
-	isTimeout bool
+	Status    string
+	Time      float64
+	IsTimeout bool
 }
 
-func fetch(uri string) FetchContext {
+func Fetch(uri string) FetchContext {
 	start := time.Now()
 	resp, err := http.Get(uri)
 	if err != nil {
 		return FetchContext{
-			isTimeout: true,
+			IsTimeout: true,
 		}
 	}
 	defer resp.Body.Close()
 
 	return FetchContext{
-		status:    resp.Status,
-		time:      float64(time.Since(start).Seconds()),
-		isTimeout: false,
+		Status:    resp.Status,
+		Time:      float64(time.Since(start).Seconds()),
+		IsTimeout: false,
 	}
 
 }

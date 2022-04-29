@@ -1,9 +1,8 @@
 package main
 
-import (
-	"github.com/modern-magic/grm/cmd/grm/app"
-)
+import "os"
 
 func main() {
-	app.Run()
+	extCode := Run()
+	os.Exit(extCode)
 }
