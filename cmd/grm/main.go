@@ -1,5 +1,8 @@
 package main
 
+import "os"
+
 func main() {
-	Run()
+	extCode := Run()
+	os.Exit(extCode)
 }

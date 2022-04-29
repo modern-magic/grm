@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/modern-magic/grm/internal"
+	"github.com/modern-magic/grm/internal/action"
 	"github.com/modern-magic/grm/internal/logger"
+	"github.com/modern-magic/grm/internal/registry"
 )
 
 var helperInfo = `Usage: Grm [options] [command]
@@ -24,40 +25,78 @@ Commands:
   help                                    Print this help
 `
 
-func Run() {
-	osArgs := os.Args[1:]
-	registries := internal.Regis
-	registries.InitlizeRegistries()
-	if len(osArgs) == 0 {
+func Run() int {
+	return runImpl(os.Args[1:])
+}
+
+func newRegistrySourceData() registry.RegistryDataSource {
+	return registry.RegistryDataSource{
+		Registry: make(map[string]string),
+		Keys:     make([]string, 0),
+	}
+}
+
+func runImpl(args []string) int {
+
+	if len(args) == 0 {
 		logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
 			return fmt.Sprintf("%s%s%s", c.Cyan, helperInfo, c.Reset)
 		})
-		return
+		return 0
 	}
 
-	for _, arg := range osArgs {
+	for _, arg := range args {
 		switch arg {
 		case "-h", "--help", "help":
 			logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
 				return fmt.Sprintf("%s%s%s", c.Cyan, helperInfo, c.Reset)
 			})
+			return 0
 		case "-v", "--version", "version":
-			logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
-				return fmt.Sprintf("%s[Grm]: %s%s", c.Green, grmVersion, c.Reset)
-			})
-		case "ls":
-			internal.ShowRegistries(registries)
-		case "current":
-			internal.ShowCurrentRegistry()
-		case "use":
-			internal.SetUsageRegistry(osArgs[1:], registries)
-		case "add":
-			internal.AddRegistry(osArgs[1:])
-		case "del":
-			internal.DelRegistry(osArgs[1:], registries.NrmRegistriesKeys)
-		case "test":
-			internal.CurlRegistry(osArgs[1:], registries)
+			logger.PrintInfo("[Grm]: version:" + grmVersion)
+			return 0
 		}
 	}
 
+	// initlize nrm & npm preset source.
+	sources := newRegistrySourceData()
+	parserSourceForRun(args, &sources)
+	return 0
+}
+
+func parserSourceForRun(args []string, source *registry.RegistryDataSource) int {
+
+	source.Keys = append(source.Keys, registry.GetPresetRegistryNames()...)
+
+	nrmMaps, nrmKyes := registry.GetUserRegistryInfo()
+
+	source.Keys = append(source.Keys, nrmKyes...)
+
+	for _, key := range registry.GetPresetRegistryNames() {
+		source.Registry[key] = registry.GetPresetRegistryInfo(key)
+	}
+
+	for _, key := range nrmKyes {
+		source.Registry[key] = nrmMaps[key].Uri
+	}
+
+	for _, arg := range args {
+		switch arg {
+		case "ls":
+			action.ShowSources(source)
+			return 0
+		case "current":
+			action.ShowCurrent()
+			return 0
+		case "use":
+			return action.SetCurrent(source, args[1:])
+		case "add":
+			return action.AddRegistry(args[1:])
+		case "del":
+			return action.DelRegistry(source, args[1:])
+		case "test":
+			return 0
+		}
+	}
+	return 0
 }
