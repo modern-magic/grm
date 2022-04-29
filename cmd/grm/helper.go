@@ -95,7 +95,7 @@ func parserSourceForRun(args []string, source *registry.RegistryDataSource) int 
 		case "del":
 			return action.DelRegistry(source, args[1:])
 		case "test":
-			return 0
+			return action.FetchRegistry(source, args[1:])
 		}
 	}
 	return 0

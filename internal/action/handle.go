@@ -1,9 +1,12 @@
 package action
 
 import (
+	"fmt"
 	"math"
+	"os"
 	"strings"
 
+	"github.com/modern-magic/grm/internal"
 	"github.com/modern-magic/grm/internal/logger"
 	"github.com/modern-magic/grm/internal/registry"
 )
@@ -67,12 +70,12 @@ func DelRegistry(sources *registry.RegistryDataSource, args []string) int {
 	_, ok := sources.Registry[name]
 
 	if !ok {
-		logger.PrintError("[Grm]: Can't found alias" + " " + name + " " + "in your .nrmrc file. Please check it exist.")
+		logger.PrintError("[Grm]: can't found alias" + " " + name + " " + "in your .nrmrc file. Please check it exist.")
 		return 1
 	}
 	flag, err := registry.DelNrm(name)
 	if flag {
-		logger.PrintSuccess("[Grm]: del registry" + " " + name + "success!")
+		logger.PrintSuccess("[Grm]: del registry" + " " + name + " " + "success!")
 		return 0
 	}
 	logger.PrintError("[Grm]: del registry fail " + err.Error())
@@ -107,6 +110,40 @@ func AddRegistry(args []string) int {
 	}
 	logger.PrintError("[Grm]: add registry fail " + err.Error())
 	return 1
+}
+
+func FetchRegistry(sources *registry.RegistryDataSource, args []string) int {
+
+	keys := make([]string, 0)
+
+	if len(args) == 0 {
+		keys = append(keys, sources.Keys...)
+	} else {
+		keys = append(keys, args[0])
+	}
+	if len(keys) == 1 {
+		if _, ok := sources.Registry[keys[0]]; !ok {
+			logger.PrintWarn("[Grm]: warning! can't found alias" + " " + keys[0] + " " + "will fetch npm\n")
+			keys[0] = "npm"
+		}
+	}
+	for _, key := range keys {
+		fetchRegistryImpl(sources.Registry[key], key)
+	}
+	return 0
+}
+
+func fetchRegistryImpl(uri, name string) {
+	ctx := internal.Fetch(uri)
+	if ctx.IsTimeout {
+		log := "[Grm:] fetch" + " " + name + " " + "timeout state:" + " " + ctx.Status
+		logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
+			return fmt.Sprintf("%s%s%s", c.Dim, log+"\n", c.Reset)
+		})
+	} else {
+		log := "[Grm:] fetch" + " " + name + " " + fmt.Sprintf("%v", ctx.Time) + " " + "state:" + " " + ctx.Status
+		logger.PrintSuccess(log + "\n")
+	}
 }
 
 func addRegistryImpl(name, uri, home string) (bool, error) {
