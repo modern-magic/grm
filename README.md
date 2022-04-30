@@ -29,7 +29,7 @@ Or download a [binary package](https://github.com/modern-magic/grm/releases/late
 ## Usage
 
 ```shell
-Usage: grm [options] [command]
+Usage: Grm [options] [command]
 
 Options:
   -v, --version                           output the version number
@@ -39,13 +39,18 @@ Commands:
   ls                                      List all the registries
   current                                 Show current registry name
   use <registry>                          Change registry to registry
-  add <name> <registry> [home]             Add one custom registry
+  add <name> <registry> [home]            Add one custom registry
   del <name>                              Delete one custom registry by alias
+  test [name]                             Test registry or registries speed by alias
   help                                    Print this help
 
 ```
 
 ## Q & A
+
+> What is grm?
+
+- A minimalist npm source manager.
 
 > Why new nrm?
 
