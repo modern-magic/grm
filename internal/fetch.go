@@ -6,9 +6,10 @@ import (
 )
 
 type FetchContext struct {
-	Status    string
-	Time      float64
-	IsTimeout bool
+	Status     string
+	StatusCode int
+	Time       float64
+	IsTimeout  bool
 }
 
 func Fetch(uri string) FetchContext {
@@ -22,9 +23,10 @@ func Fetch(uri string) FetchContext {
 	defer resp.Body.Close()
 
 	return FetchContext{
-		Status:    resp.Status,
-		Time:      float64(time.Since(start).Seconds()),
-		IsTimeout: false,
+		Status:     resp.Status,
+		StatusCode: resp.StatusCode,
+		Time:       float64(time.Since(start).Seconds()),
+		IsTimeout:  false,
 	}
 
 }

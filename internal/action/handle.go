@@ -21,13 +21,24 @@ func ShowSources(sources *registry.RegistryDataSource) {
 
 	cur := getCurrent()
 
-	for _, key := range sources.Keys {
-		prefix := " "
+	for i, key := range sources.Keys {
+		prefix := ""
 		uri := sources.Registry[key]
 		if cur == uri {
 			prefix = "* "
 		}
-		logger.PrintSuccess("\n" + prefix + key + " " + getDashLine(key, outLen) + " " + uri)
+		log := prefix + key + " " + getDashLine(key, outLen) + " " + uri
+
+		if i != len(sources.Keys)-1 {
+			log = log + "\n"
+		}
+
+		if prefix == "" {
+			fmt.Printf("%s", log)
+		} else {
+			logger.PrintSuccess(log)
+
+		}
 	}
 
 }
@@ -136,13 +147,17 @@ func FetchRegistry(sources *registry.RegistryDataSource, args []string) int {
 func fetchRegistryImpl(uri, name string) {
 	ctx := internal.Fetch(uri)
 	if ctx.IsTimeout {
-		log := "[Grm:] fetch" + " " + name + " " + "timeout state:" + " " + ctx.Status
+		log := "[Grm]: fetch" + " " + name + " " + "timeout state:" + " " + ctx.Status + "\n"
 		logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
-			return fmt.Sprintf("%s%s%s", c.Dim, log+"\n", c.Reset)
+			return fmt.Sprintf("%s%s%s", c.Dim, log, c.Reset)
 		})
 	} else {
-		log := "[Grm:] fetch" + " " + name + " " + fmt.Sprintf("%v", ctx.Time) + " " + "state:" + " " + ctx.Status
-		logger.PrintSuccess(log + "\n")
+		log := "[Grm]: fetch" + " " + name + " " + fmt.Sprintf("%v", ctx.Time) + " " + "state:" + " " + ctx.Status + "\n"
+		if ctx.StatusCode != 200 {
+			logger.PrintError(log)
+		} else {
+			logger.PrintSuccess(log)
+		}
 	}
 }
 
