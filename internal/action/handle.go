@@ -138,26 +138,42 @@ func FetchRegistry(sources *registry.RegistryDataSource, args []string) int {
 			keys[0] = "npm"
 		}
 	}
-	for _, key := range keys {
-		fetchRegistryImpl(sources.Registry[key], key)
+	for i, key := range keys {
+		end := i == len(keys)-1
+		fetchRegistryImpl(sources.Registry[key], key, end)
 	}
 	return 0
 }
 
-func fetchRegistryImpl(uri, name string) {
+func fetchRegistryImpl(uri, name string, end bool) {
 	ctx := internal.Fetch(uri)
-	if ctx.IsTimeout {
-		log := "[Grm]: fetch" + " " + name + " " + "timeout state:" + " " + ctx.Status + "\n"
+	log := "[Grm]: fetch " + name
+
+	isTimeout := ctx.IsTimeout
+
+	if isTimeout {
+		log = log + " " + " state " + ctx.Status
+	} else {
+		log = log + " " + fmt.Sprintf("%.2f", ctx.Time) + "s " + "state: " + ctx.Status
+	}
+
+	log = log + "\n"
+
+	if end {
+		log = log[0 : len(log)-1]
+	}
+
+	if isTimeout {
 		logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
 			return fmt.Sprintf("%s%s%s", c.Dim, log, c.Reset)
 		})
+		return
+	}
+
+	if ctx.StatusCode != 200 {
+		logger.PrintError(log)
 	} else {
-		log := "[Grm]: fetch" + " " + name + " " + fmt.Sprintf("%v", ctx.Time) + " " + "state:" + " " + ctx.Status + "\n"
-		if ctx.StatusCode != 200 {
-			logger.PrintError(log)
-		} else {
-			logger.PrintSuccess(log)
-		}
+		logger.PrintSuccess(log)
 	}
 }
 

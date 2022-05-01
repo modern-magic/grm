@@ -64,7 +64,7 @@ var PresetRegistry = map[string]RegsitryInfo{
 func GetPresetRegistryNames() []string {
 	var dict interface{} = PresetSourceName
 	names := reflect.ValueOf(dict)
-	sequenNames := make([]string, 7)
+	sequenNames := make([]string, names.NumField())
 	for i := 0; i < names.NumField(); i++ {
 		sequenNames[i] = names.Field(i).String()
 	}
