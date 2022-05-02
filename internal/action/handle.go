@@ -27,12 +27,13 @@ func ShowSources(sources *registry.RegistryDataSource) {
 		if cur == uri {
 			prefix = "* "
 		}
-		log := prefix + key + " " + getDashLine(key, outLen) + " " + uri + registry.Eol()
+
+		log := internal.StringJoin(prefix, key, getDashLine(key, outLen), uri, registry.Eol())
 
 		if prefix == "" {
 			fmt.Printf("%s", log)
 		} else {
-			logger.PrintSuccess(log)
+			logger.Success(log)
 
 		}
 	}
@@ -43,7 +44,7 @@ func ShowSources(sources *registry.RegistryDataSource) {
 
 func ShowCurrent() {
 	cur := getCurrent()
-	logger.PrintInfo("[Grm]: you are using" + cur)
+	logger.Info(internal.StringJoin("[Grm]: you are using", cur))
 }
 
 func SetCurrent(sources *registry.RegistryDataSource, args []string) int {
@@ -55,13 +56,13 @@ func SetCurrent(sources *registry.RegistryDataSource, args []string) int {
 	}
 	uri, ok := sources.Registry[name]
 	if !ok {
-		logger.PrintError("[Grm]: Can't found alias" + " " + name + " " + "in your .nrmrc file. Please check it exist.")
+		logger.Error(internal.StringJoin("[Grm]: Can't found alias", name, "in your .nrmrc file. Please check it exist.", registry.Eol()))
 		return 1
 	}
 	registry.WriteNpm(registry.RegsitryInfo{
 		Uri: uri,
 	})
-	logger.PrintSuccess("[Grm]: use" + " " + name + " " + "success~" + registry.Eol())
+	logger.Success(internal.StringJoin("[Grm]: use", name, "success~", registry.Eol()))
 	return 0
 }
 
@@ -77,15 +78,15 @@ func DelRegistry(sources *registry.RegistryDataSource, args []string) int {
 	_, ok := sources.Registry[name]
 
 	if !ok {
-		logger.PrintError("[Grm]: can't found alias" + " " + name + " " + "in your .nrmrc file. Please check it exist." + registry.Eol())
+		logger.Error(internal.StringJoin("[Grm]: Can't found alias", name, "in your .nrmrc file. Please check it exist.", registry.Eol()))
 		return 1
 	}
 	flag, err := registry.DelNrm(name)
 	if flag {
-		logger.PrintSuccess("[Grm]: del registry" + " " + name + " " + "success!" + registry.Eol())
+		logger.Success(internal.StringJoin("[Grm]: del registry", name, "success!", registry.Eol()))
 		return 0
 	}
-	logger.PrintError("[Grm]: del registry fail " + err.Error() + registry.Eol())
+	logger.Error(internal.StringJoin("[Grm]: del registry fail", err.Error(), registry.Eol()))
 	return 1
 
 }
@@ -97,7 +98,7 @@ func AddRegistry(args []string) int {
 	uri := ""
 
 	if len(args) <= 1 {
-		logger.PrintError("[Grm]: name and registry url is must be entry" + registry.Eol())
+		logger.Error(internal.StringJoin("[Grm]: name and registry url is must be entry", registry.Eol()))
 		return 1
 	}
 	name = args[0]
@@ -112,10 +113,10 @@ func AddRegistry(args []string) int {
 	flag, err := addRegistryImpl(name, uri, home)
 
 	if flag {
-		logger.PrintSuccess("[Grm]: add registry success!" + registry.Eol())
+		logger.Success(internal.StringJoin("[Grm]: add registry success!", registry.Eol()))
 		return 0
 	}
-	logger.PrintError("[Grm]: add registry fail " + err.Error() + registry.Eol())
+	logger.Error(internal.StringJoin("[Grm]: add registry fail", err.Error(), registry.Eol()))
 	return 1
 }
 
@@ -130,7 +131,7 @@ func FetchRegistry(sources *registry.RegistryDataSource, args []string) int {
 	}
 	if len(keys) == 1 {
 		if _, ok := sources.Registry[keys[0]]; !ok {
-			logger.PrintWarn("[Grm]: warning! can't found alias" + " " + keys[0] + " " + "will fetch npm" + registry.Eol())
+			logger.Warn(internal.StringJoin("[Grm]: warning! can't found alias", keys[0], "will fetch npm source", registry.Eol()))
 			keys[0] = "npm"
 		}
 	}
@@ -147,9 +148,9 @@ func fetchRegistryImpl(uri, name string) {
 	isTimeout := ctx.IsTimeout
 
 	if isTimeout {
-		log = log + " " + " state " + ctx.Status
+		log = internal.StringJoin(log, "state", ctx.Status)
 	} else {
-		log = log + " " + fmt.Sprintf("%.2f", ctx.Time) + "s " + "state: " + ctx.Status
+		log = internal.StringJoin(log, fmt.Sprintf("%.2f%s", ctx.Time, "s"), "state:", ctx.Status)
 	}
 
 	log = log + registry.Eol()
@@ -162,9 +163,9 @@ func fetchRegistryImpl(uri, name string) {
 	}
 
 	if ctx.StatusCode != 200 {
-		logger.PrintError(log)
+		logger.Error(log)
 	} else {
-		logger.PrintSuccess(log)
+		logger.Success(log)
 	}
 }
 

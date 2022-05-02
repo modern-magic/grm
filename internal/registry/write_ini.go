@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/go-ini/ini"
+	"github.com/modern-magic/grm/internal"
 	"github.com/modern-magic/grm/internal/logger"
 )
 
@@ -101,7 +102,7 @@ func WriteNpm(info RegsitryInfo) {
 	str := strings.Join(next, eol())
 	err = ioutil.WriteFile(Npmrc, []byte(str), 0644)
 	if err != nil {
-		logger.PrintError("[Grm]: Error With" + err.Error())
+		logger.Error(internal.StringJoin("[Grm]: Error with", err.Error()))
 		return
 	}
 }

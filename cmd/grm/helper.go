@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/modern-magic/grm/internal"
 	"github.com/modern-magic/grm/internal/action"
 	"github.com/modern-magic/grm/internal/logger"
 	"github.com/modern-magic/grm/internal/registry"
@@ -53,7 +54,7 @@ func runImpl(args []string) int {
 			})
 			return 0
 		case "-v", "--version", "version":
-			logger.PrintInfo("[Grm]: version:" + grmVersion + registry.Eol())
+			logger.Info(internal.StringJoin("[Grm]: version", grmVersion, registry.Eol()))
 			return 0
 		}
 	}
