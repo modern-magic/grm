@@ -21,17 +21,13 @@ func ShowSources(sources *registry.RegistryDataSource) {
 
 	cur := getCurrent()
 
-	for i, key := range sources.Keys {
+	for _, key := range sources.Keys {
 		prefix := ""
 		uri := sources.Registry[key]
 		if cur == uri {
 			prefix = "* "
 		}
-		log := prefix + key + " " + getDashLine(key, outLen) + " " + uri
-
-		if i != len(sources.Keys)-1 {
-			log = log + "\n"
-		}
+		log := prefix + key + " " + getDashLine(key, outLen) + " " + uri + registry.Eol()
 
 		if prefix == "" {
 			fmt.Printf("%s", log)
@@ -65,7 +61,7 @@ func SetCurrent(sources *registry.RegistryDataSource, args []string) int {
 	registry.WriteNpm(registry.RegsitryInfo{
 		Uri: uri,
 	})
-	logger.PrintSuccess("[Grm]: use" + " " + name + " " + "success~\n")
+	logger.PrintSuccess("[Grm]: use" + " " + name + " " + "success~" + registry.Eol())
 	return 0
 }
 
@@ -81,15 +77,15 @@ func DelRegistry(sources *registry.RegistryDataSource, args []string) int {
 	_, ok := sources.Registry[name]
 
 	if !ok {
-		logger.PrintError("[Grm]: can't found alias" + " " + name + " " + "in your .nrmrc file. Please check it exist.")
+		logger.PrintError("[Grm]: can't found alias" + " " + name + " " + "in your .nrmrc file. Please check it exist." + registry.Eol())
 		return 1
 	}
 	flag, err := registry.DelNrm(name)
 	if flag {
-		logger.PrintSuccess("[Grm]: del registry" + " " + name + " " + "success!")
+		logger.PrintSuccess("[Grm]: del registry" + " " + name + " " + "success!" + registry.Eol())
 		return 0
 	}
-	logger.PrintError("[Grm]: del registry fail " + err.Error())
+	logger.PrintError("[Grm]: del registry fail " + err.Error() + registry.Eol())
 	return 1
 
 }
@@ -101,7 +97,7 @@ func AddRegistry(args []string) int {
 	uri := ""
 
 	if len(args) <= 1 {
-		logger.PrintError("[Grm]: name and registry url is must be entry")
+		logger.PrintError("[Grm]: name and registry url is must be entry" + registry.Eol())
 		return 1
 	}
 	name = args[0]
@@ -116,10 +112,10 @@ func AddRegistry(args []string) int {
 	flag, err := addRegistryImpl(name, uri, home)
 
 	if flag {
-		logger.PrintSuccess("[Grm]: add registry success!")
+		logger.PrintSuccess("[Grm]: add registry success!" + registry.Eol())
 		return 0
 	}
-	logger.PrintError("[Grm]: add registry fail " + err.Error())
+	logger.PrintError("[Grm]: add registry fail " + err.Error() + registry.Eol())
 	return 1
 }
 
@@ -134,18 +130,17 @@ func FetchRegistry(sources *registry.RegistryDataSource, args []string) int {
 	}
 	if len(keys) == 1 {
 		if _, ok := sources.Registry[keys[0]]; !ok {
-			logger.PrintWarn("[Grm]: warning! can't found alias" + " " + keys[0] + " " + "will fetch npm\n")
+			logger.PrintWarn("[Grm]: warning! can't found alias" + " " + keys[0] + " " + "will fetch npm" + registry.Eol())
 			keys[0] = "npm"
 		}
 	}
-	for i, key := range keys {
-		end := i == len(keys)-1
-		fetchRegistryImpl(sources.Registry[key], key, end)
+	for _, key := range keys {
+		fetchRegistryImpl(sources.Registry[key], key)
 	}
 	return 0
 }
 
-func fetchRegistryImpl(uri, name string, end bool) {
+func fetchRegistryImpl(uri, name string) {
 	ctx := internal.Fetch(uri)
 	log := "[Grm]: fetch " + name
 
@@ -157,11 +152,7 @@ func fetchRegistryImpl(uri, name string, end bool) {
 		log = log + " " + fmt.Sprintf("%.2f", ctx.Time) + "s " + "state: " + ctx.Status
 	}
 
-	log = log + "\n"
-
-	if end {
-		log = log[0 : len(log)-1]
-	}
+	log = log + registry.Eol()
 
 	if isTimeout {
 		logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {

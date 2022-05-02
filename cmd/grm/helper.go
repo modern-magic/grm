@@ -53,7 +53,7 @@ func runImpl(args []string) int {
 			})
 			return 0
 		case "-v", "--version", "version":
-			logger.PrintInfo("[Grm]: version:" + grmVersion)
+			logger.PrintInfo("[Grm]: version:" + grmVersion + registry.Eol())
 			return 0
 		}
 	}
