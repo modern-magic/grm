@@ -91,6 +91,7 @@ var (
 )
 
 type RegistryDataSource struct {
-	Registry map[string]string
-	Keys     []string
+	Registry     map[string]string
+	Keys         []string
+	UserRegistry map[string]string
 }
