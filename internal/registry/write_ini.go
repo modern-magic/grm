@@ -7,8 +7,6 @@ import (
 	"strings"
 
 	"github.com/go-ini/ini"
-	"github.com/modern-magic/grm/internal"
-	"github.com/modern-magic/grm/internal/logger"
 )
 
 func isWin() bool {
@@ -84,25 +82,29 @@ func ReadNpm() string {
 	return cfg.Section("").Key(Registry).Value()
 }
 
-func WriteNpm(info RegsitryInfo) {
+func WriteNpm(info RegsitryInfo) (bool, error) {
 	buf, err := ioutil.ReadFile(Npmrc)
 	if err != nil {
-		return
+		return false, err
 	}
-	slice := strings.Split(string(buf), eol())
+
+	return writeNpmImpl(buf, info.Uri)
+}
+
+func writeNpmImpl(buf []byte, uri string) (bool, error) {
+	sections := strings.Split(string(buf), eol())
 	next := make([]string, 0)
-	for _, k := range slice {
-		if strings.Index(k, "registry=") == 0 || strings.Index(k, "home=") == 0 {
-			tmp := strings.Split(k, "=")
-			tmp[1] = info.Uri
-			k = strings.Join(tmp, "=")
+	for _, key := range sections {
+		if strings.Index(key, "registry=") == 0 || strings.Index(key, "home=") == 0 {
+			temp := strings.Split(key, "=")
+			temp[1] = uri
+			line := strings.Join(temp, "=")
+			next = append(next, line)
+		} else {
+			next = append(next, key)
 		}
-		next = append(next, k)
 	}
-	str := strings.Join(next, eol())
-	err = ioutil.WriteFile(Npmrc, []byte(str), 0644)
-	if err != nil {
-		logger.Error(internal.StringJoin("[Grm]: Error with", err.Error()))
-		return
-	}
+	after := strings.Join(next, eol())
+	err := ioutil.WriteFile(Npmrc, []byte(after), 0644)
+	return err == nil, err
 }

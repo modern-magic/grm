@@ -59,11 +59,15 @@ func SetCurrent(source *registry.RegistryDataSource, args []string) int {
 		logger.Error(internal.StringJoin("[Grm]: Can't found alias", name, "in your .nrmrc file. Please check it exist.", registry.Eol()))
 		return 1
 	}
-	registry.WriteNpm(registry.RegsitryInfo{
+	flag, err := registry.WriteNpm(registry.RegsitryInfo{
 		Uri: uri,
 	})
-	logger.Success(internal.StringJoin("[Grm]: use", name, "success~", registry.Eol()))
-	return 0
+	if flag {
+		logger.Success(internal.StringJoin("[Grm]: use", name, "success~", registry.Eol()))
+		return 0
+	}
+	logger.Error(internal.StringJoin("[Grm]: error with", err.Error(), registry.Eol()))
+	return 1
 }
 
 // del .nrm file registry alias
@@ -107,7 +111,7 @@ func AddRegistry(source *registry.RegistryDataSource, args []string) int {
 	 * Check if the name is same as preset source name
 	 */
 	_, ok := source.UserRegistry[name]
-	if !ok {
+	if ok {
 		logger.Error("[Grm]: can't be the same as the default source name!")
 		return 1
 	}
