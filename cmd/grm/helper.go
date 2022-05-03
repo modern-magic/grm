@@ -32,8 +32,9 @@ func Run() int {
 
 func newRegistrySourceData() registry.RegistryDataSource {
 	return registry.RegistryDataSource{
-		Registry: make(map[string]string),
-		Keys:     make([]string, 0),
+		Registry:     make(map[string]string),
+		Keys:         make([]string, 0),
+		UserRegistry: make(map[string]string),
 	}
 }
 
@@ -69,16 +70,17 @@ func parserSourceForRun(args []string, source *registry.RegistryDataSource) int 
 
 	source.Keys = append(source.Keys, registry.GetPresetRegistryNames()...)
 
-	nrmMaps, nrmKyes := registry.GetUserRegistryInfo()
+	nrmMaps, nrmKeys := registry.GetUserRegistryInfo()
 
-	source.Keys = append(source.Keys, nrmKyes...)
+	source.Keys = append(source.Keys, nrmKeys...)
 
 	for _, key := range registry.GetPresetRegistryNames() {
 		source.Registry[key] = registry.GetPresetRegistryInfo(key)
 	}
 
-	for _, key := range nrmKyes {
+	for _, key := range nrmKeys {
 		source.Registry[key] = nrmMaps[key].Uri
+		source.UserRegistry[key] = nrmMaps[key].Uri
 	}
 
 	for _, arg := range args {
@@ -92,7 +94,7 @@ func parserSourceForRun(args []string, source *registry.RegistryDataSource) int 
 		case "use":
 			return action.SetCurrent(source, args[1:])
 		case "add":
-			return action.AddRegistry(args[1:])
+			return action.AddRegistry(source,args[1:])
 		case "del":
 			return action.DelRegistry(source, args[1:])
 		case "test":

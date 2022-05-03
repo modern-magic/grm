@@ -15,15 +15,15 @@ func getCurrent() string {
 	return registry.ReadNpm()
 }
 
-func ShowSources(sources *registry.RegistryDataSource) {
+func ShowSources(source *registry.RegistryDataSource) {
 
-	outLen := len(sources.Keys) + 3
+	outLen := len(source.Keys) + 3
 
 	cur := getCurrent()
 
-	for _, key := range sources.Keys {
+	for _, key := range source.Keys {
 		prefix := ""
-		uri := sources.Registry[key]
+		uri := source.Registry[key]
 		if cur == uri {
 			prefix = "* "
 		}
@@ -47,14 +47,14 @@ func ShowCurrent() {
 	logger.Info(internal.StringJoin("[Grm]: you are using", cur))
 }
 
-func SetCurrent(sources *registry.RegistryDataSource, args []string) int {
+func SetCurrent(source *registry.RegistryDataSource, args []string) int {
 
 	name := "npm"
 
 	if len(args) >= 1 {
 		name = args[0]
 	}
-	uri, ok := sources.Registry[name]
+	uri, ok := source.Registry[name]
 	if !ok {
 		logger.Error(internal.StringJoin("[Grm]: Can't found alias", name, "in your .nrmrc file. Please check it exist.", registry.Eol()))
 		return 1
@@ -68,14 +68,14 @@ func SetCurrent(sources *registry.RegistryDataSource, args []string) int {
 
 // del .nrm file registry alias
 
-func DelRegistry(sources *registry.RegistryDataSource, args []string) int {
+func DelRegistry(source *registry.RegistryDataSource, args []string) int {
 
 	if len(args) == 0 {
 		return 0
 	}
 	name := args[0]
 
-	_, ok := sources.Registry[name]
+	_, ok := source.UserRegistry[name]
 
 	if !ok {
 		logger.Error(internal.StringJoin("[Grm]: Can't found alias", name, "in your .nrmrc file. Please check it exist.", registry.Eol()))
@@ -91,7 +91,7 @@ func DelRegistry(sources *registry.RegistryDataSource, args []string) int {
 
 }
 
-func AddRegistry(args []string) int {
+func AddRegistry(source *registry.RegistryDataSource, args []string) int {
 
 	name := ""
 	home := ""
@@ -102,6 +102,16 @@ func AddRegistry(args []string) int {
 		return 1
 	}
 	name = args[0]
+
+	/**
+	 * Check if the name is same as preset source name
+	 */
+	_, ok := source.UserRegistry[name]
+	if !ok {
+		logger.Error("[Grm]: can't be the same as the default source name!")
+		return 1
+	}
+
 	uri = args[1]
 	if len(args) == 2 {
 		home = uri
@@ -120,23 +130,23 @@ func AddRegistry(args []string) int {
 	return 1
 }
 
-func FetchRegistry(sources *registry.RegistryDataSource, args []string) int {
+func FetchRegistry(source *registry.RegistryDataSource, args []string) int {
 
 	keys := make([]string, 0)
 
 	if len(args) == 0 {
-		keys = append(keys, sources.Keys...)
+		keys = append(keys, source.Keys...)
 	} else {
 		keys = append(keys, args[0])
 	}
 	if len(keys) == 1 {
-		if _, ok := sources.Registry[keys[0]]; !ok {
+		if _, ok := source.Registry[keys[0]]; !ok {
 			logger.Warn(internal.StringJoin("[Grm]: warning! can't found alias", keys[0], "will fetch npm source", registry.Eol()))
 			keys[0] = "npm"
 		}
 	}
 	for _, key := range keys {
-		fetchRegistryImpl(sources.Registry[key], key)
+		fetchRegistryImpl(source.Registry[key], key)
 	}
 	return 0
 }
