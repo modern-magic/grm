@@ -124,6 +124,11 @@ func AddRegistry(source *registry.RegistryDataSource, args []string) int {
 		home = args[2]
 	}
 
+	if !internal.IsUri(uri) && !internal.IsUri(home) {
+		logger.Error("[Grm]: please verify the uri address you entered.")
+		return 1
+	}
+
 	flag, err := addRegistryImpl(name, uri, home)
 
 	if flag {
