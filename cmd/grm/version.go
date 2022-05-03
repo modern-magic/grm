@@ -1,3 +1,3 @@
 package main
 
-const grmVersion = "0.5.0"
+const grmVersion = "0.5.1"
