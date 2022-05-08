@@ -3,6 +3,7 @@
 <p align="center">
 <a title="Go Report Card" target="_blank" href="https://goreportcard.com/report/github.com/modern-magic/grm"><img src="https://goreportcard.com/badge/github.com/modern-magic/grm?style=flat-square" /></a>
 <a title="Doc for grm" target="_blank" href="https://pkg.go.dev/github.com/modern-magic/grm"><img src="https://pkg.go.dev/badge/github.com/modern-magic/grm.svg" /></a>
+<a title="Codecov" target="_blank" href="https://codecov.io/gh/modern-magic/grm"><img src="https://img.shields.io/codecov/c/github/modern-magic/grm?style=flat-square&logo=codecov" /></a>
 <a title="Release" target="_blank" href="https://github.com/modern-magic/grm/releases"><img src="https://img.shields.io/github/v/release/modern-magic/grm.svg?color=161823&style=flat-square&logo=smartthings" /></a>
 </p>
 

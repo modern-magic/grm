@@ -1,0 +1,41 @@
+name: Unit Test
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  run-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: setup go
+        uses: actions/setup-go@v3
+        with:
+          go-version: "1.18"
+
+      - name: Cache go modules
+        uses: actions/cache@v2
+        with:
+          path: |
+            ${{ steps.vars.outputs.go_cache }}
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-${{ matrix.go }}-go-ci-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.go }}-go-ci
+
+      - name: Run unit tests
+        run: go test -race -coverprofile=coverage -covermode=atomic -v ./...
+
+      - name: Upload code coverage report to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage
+          flags: unittests
+          verbose: true
+          name: codecov-grm
