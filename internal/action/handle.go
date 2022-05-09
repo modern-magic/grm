@@ -60,9 +60,12 @@ func SetCurrent(source *registry.RegistryDataSource, args []string) int {
 		return 1
 	}
 	flag, err := registry.WriteNpm(uri)
-	if flag {
-		logger.Success(internal.StringJoin("[Grm]: use", name, "success~", registry.Eol()))
-		return 0
+	if err != nil {
+		logger.Error(internal.StringJoin("[Grm]: error with", err.Error(), registry.Eol()))
+		return 1
+	}
+	logger.Success(internal.StringJoin("[Grm]: use", name, "success~", registry.Eol()))
+	return 0
 	}
 	logger.Error(internal.StringJoin("[Grm]: error with", err.Error(), registry.Eol()))
 	return 1
