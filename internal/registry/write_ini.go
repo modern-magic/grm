@@ -55,10 +55,10 @@ func ReadNrm() (map[string]RegsitryInfo, []string) {
 	return nrmRegistry, keys
 }
 
-func WriteNrm(name, uri, home string) (bool, error) {
+func WriteNrm(name, uri, home string) error {
 	cfg := writeNrmImpl(name, uri, home)
 	err := cfg.SaveTo(Nrmrc)
-	return err == nil, err
+	return err
 }
 
 func writeNrmImpl(name, uri, home string) *ini.File {
@@ -70,11 +70,11 @@ func writeNrmImpl(name, uri, home string) *ini.File {
 	return cfg
 }
 
-func DelNrm(name string) (bool, error) {
+func DelNrm(name string) error {
 	cfg := writeNrmImpl(name, "", "")
 	cfg.DeleteSection(name)
 	err := cfg.SaveTo(Nrmrc)
-	return err == nil, err
+	return err
 }
 
 func ReadNpm() string {
@@ -84,10 +84,10 @@ func ReadNpm() string {
 
 // https://docs.npmjs.com/cli/v8/commands/npm-config
 
-func WriteNpm(uri string) (bool, error) {
+func WriteNpm(uri string) error {
 	args := []string{"config", "set", "registry", uri}
 	cmd := exec.Command("npm", args...)
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
-	return err == nil, err
+	return err
 }
