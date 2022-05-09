@@ -59,15 +59,13 @@ func SetCurrent(source *registry.RegistryDataSource, args []string) int {
 		logger.Error(internal.StringJoin("[Grm]: Can't found alias", name, "in your .nrmrc file. Please check it exist.", registry.Eol()))
 		return 1
 	}
-	flag, err := registry.WriteNpm(registry.RegsitryInfo{
-		Uri: uri,
-	})
-	if flag {
-		logger.Success(internal.StringJoin("[Grm]: use", name, "success~", registry.Eol()))
-		return 0
+	err := registry.WriteNpm(uri)
+	if err != nil {
+		logger.Error(internal.StringJoin("[Grm]: error with", err.Error(), registry.Eol()))
+		return 1
 	}
-	logger.Error(internal.StringJoin("[Grm]: error with", err.Error(), registry.Eol()))
-	return 1
+	logger.Success(internal.StringJoin("[Grm]: use", name, "success~", registry.Eol()))
+	return 0
 }
 
 // del .nrm file registry alias
@@ -85,13 +83,14 @@ func DelRegistry(source *registry.RegistryDataSource, args []string) int {
 		logger.Error(internal.StringJoin("[Grm]: Can't found alias", name, "in your .nrmrc file. Please check it exist.", registry.Eol()))
 		return 1
 	}
-	flag, err := registry.DelNrm(name)
-	if flag {
-		logger.Success(internal.StringJoin("[Grm]: del registry", name, "success!", registry.Eol()))
-		return 0
+	err := registry.DelNrm(name)
+	if err != nil {
+		logger.Error(internal.StringJoin("[Grm]: del registry fail", err.Error(), registry.Eol()))
+		return 1
+
 	}
-	logger.Error(internal.StringJoin("[Grm]: del registry fail", err.Error(), registry.Eol()))
-	return 1
+	logger.Success(internal.StringJoin("[Grm]: del registry", name, "success!", registry.Eol()))
+	return 0
 
 }
 
@@ -129,14 +128,14 @@ func AddRegistry(source *registry.RegistryDataSource, args []string) int {
 		return 1
 	}
 
-	flag, err := addRegistryImpl(name, uri, home)
+	err := addRegistryImpl(name, uri, home)
 
-	if flag {
-		logger.Success(internal.StringJoin("[Grm]: add registry success!", registry.Eol()))
-		return 0
+	if err != nil {
+		logger.Error(internal.StringJoin("[Grm]: add registry fail", err.Error(), registry.Eol()))
+		return 1
 	}
-	logger.Error(internal.StringJoin("[Grm]: add registry fail", err.Error(), registry.Eol()))
-	return 1
+	logger.Success(internal.StringJoin("[Grm]: add registry success!", registry.Eol()))
+	return 0
 }
 
 func FetchRegistry(source *registry.RegistryDataSource, args []string) int {
@@ -188,7 +187,7 @@ func fetchRegistryImpl(uri, name string) {
 	}
 }
 
-func addRegistryImpl(name, uri, home string) (bool, error) {
+func addRegistryImpl(name, uri, home string) error {
 	return registry.WriteNrm(name, uri, home)
 
 }

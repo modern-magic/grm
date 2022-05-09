@@ -1,8 +1,8 @@
 package registry
 
 import (
-	"io/ioutil"
 	"os"
+	"os/exec"
 	"runtime"
 	"strings"
 
@@ -55,10 +55,10 @@ func ReadNrm() (map[string]RegsitryInfo, []string) {
 	return nrmRegistry, keys
 }
 
-func WriteNrm(name, uri, home string) (bool, error) {
+func WriteNrm(name, uri, home string) error {
 	cfg := writeNrmImpl(name, uri, home)
 	err := cfg.SaveTo(Nrmrc)
-	return err == nil, err
+	return err
 }
 
 func writeNrmImpl(name, uri, home string) *ini.File {
@@ -70,11 +70,11 @@ func writeNrmImpl(name, uri, home string) *ini.File {
 	return cfg
 }
 
-func DelNrm(name string) (bool, error) {
+func DelNrm(name string) error {
 	cfg := writeNrmImpl(name, "", "")
 	cfg.DeleteSection(name)
 	err := cfg.SaveTo(Nrmrc)
-	return err == nil, err
+	return err
 }
 
 func ReadNpm() string {
@@ -82,29 +82,12 @@ func ReadNpm() string {
 	return cfg.Section("").Key(Registry).Value()
 }
 
-func WriteNpm(info RegsitryInfo) (bool, error) {
-	buf, err := ioutil.ReadFile(Npmrc)
-	if err != nil {
-		return false, err
-	}
+// https://docs.npmjs.com/cli/v8/commands/npm-config
 
-	return writeNpmImpl(buf, info.Uri)
-}
-
-func writeNpmImpl(buf []byte, uri string) (bool, error) {
-	sections := strings.Split(string(buf), eol())
-	next := make([]string, 0)
-	for _, key := range sections {
-		if strings.Index(key, "registry=") == 0 || strings.Index(key, "home=") == 0 {
-			temp := strings.Split(key, "=")
-			temp[1] = uri
-			line := strings.Join(temp, "=")
-			next = append(next, line)
-		} else {
-			next = append(next, key)
-		}
-	}
-	after := strings.Join(next, eol())
-	err := ioutil.WriteFile(Npmrc, []byte(after), 0644)
-	return err == nil, err
+func WriteNpm(uri string) error {
+	args := []string{"config", "set", "registry", uri}
+	cmd := exec.Command("npm", args...)
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	return err
 }
