@@ -5,6 +5,7 @@ import (
 	"math"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/modern-magic/grm/internal"
 	"github.com/modern-magic/grm/internal/logger"
@@ -106,11 +107,7 @@ func AddRegistry(source *registry.RegistryDataSource, args []string) int {
 	}
 	name = args[0]
 
-	/**
-	 * Check if the name is same as preset source name
-	 */
-	_, ok := source.UserRegistry[name]
-	if ok {
+	if _, ok := source.UserRegistry[name]; ok {
 		logger.Error("[Grm]: can't be the same as the default source name!")
 		return 1
 	}
@@ -142,6 +139,8 @@ func FetchRegistry(source *registry.RegistryDataSource, args []string) int {
 
 	keys := make([]string, 0)
 
+	var wg sync.WaitGroup
+
 	if len(args) == 0 {
 		keys = append(keys, source.Keys...)
 	} else {
@@ -149,17 +148,20 @@ func FetchRegistry(source *registry.RegistryDataSource, args []string) int {
 	}
 	if len(keys) == 1 {
 		if _, ok := source.Registry[keys[0]]; !ok {
-			logger.Warn(internal.StringJoin("[Grm]: warning! can't found alias", keys[0], "will fetch npm source", registry.Eol()))
-			keys[0] = "npm"
+			logger.Warn(internal.StringJoin("[Grm]: warning! can't found alias", keys[0], "please check it exist.", registry.Eol()))
+			return 1
 		}
 	}
 	for _, key := range keys {
-		fetchRegistryImpl(source.Registry[key], key)
+		wg.Add(1)
+		go fetchRegistryImpl(source.Registry[key], key, &wg)
 	}
+
+	wg.Wait()
 	return 0
 }
 
-func fetchRegistryImpl(uri, name string) {
+func fetchRegistryImpl(uri, name string, wg *sync.WaitGroup) {
 	ctx := internal.Fetch(uri)
 	log := "[Grm]: fetch " + name
 
@@ -172,6 +174,8 @@ func fetchRegistryImpl(uri, name string) {
 	}
 
 	log = log + registry.Eol()
+
+	defer wg.Done()
 
 	if isTimeout {
 		logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
