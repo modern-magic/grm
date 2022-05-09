@@ -59,9 +59,7 @@ func SetCurrent(source *registry.RegistryDataSource, args []string) int {
 		logger.Error(internal.StringJoin("[Grm]: Can't found alias", name, "in your .nrmrc file. Please check it exist.", registry.Eol()))
 		return 1
 	}
-	flag, err := registry.WriteNpm(registry.RegsitryInfo{
-		Uri: uri,
-	})
+	flag, err := registry.WriteNpm(uri)
 	if flag {
 		logger.Success(internal.StringJoin("[Grm]: use", name, "success~", registry.Eol()))
 		return 0
