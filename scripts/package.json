@@ -1,0 +1,7 @@
+{
+  "private": "true",
+  "author": "Kanno",
+  "scripts": {
+    "msi": "node windwos-msi.js"
+  }
+}
