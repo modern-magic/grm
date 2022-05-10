@@ -5,40 +5,35 @@
  * Author: Kanno
  * Time: 10/5/2022
  */
-const { access } = require('fs')
-const fs = require('fs/promises')
+const fs = require('fs-extra')
 const path = require('path')
-const { spawn } = require('child_process')
+const execa = require('execa')
 const os = require('os')
-
-const checkExist = (path) =>
-  new Promise((resolve, reject) => {
-    access(path, (err) => {
-      if (err) reject(err)
-      resolve()
-    })
-  })
 
 const main = async () => {
   const root = process.cwd()
   const verPath = path.join(root, 'version.txt')
   const packedPath = path.join(root, 'build')
   try {
-    await Promise.all([verPath, packedPath].map((p) => checkExist(p)))
+    ;[verPath, packedPath].map((p) => fs.existsSync(p))
     const ver = await fs.readFile(verPath, 'utf-8')
-    const winTars = [
-      path.join(packedPath, 'grm-windows-32.tar.gz'),
-      path.join(packedPath, 'grm-windows-64.tar.gz'),
-      path.join(packedPath, 'grm-windows-arm64.tar.gz'),
-    ]
-    const args = ['-xzvf']
+    const winTars = ['build/grm-windows-32.tar.gz', 'build/grm-windows-64.tar.gz', 'build/grm-windows-arm64.tar.gz']
+    const args = ['-zxvf']
+    await Promise.all(
+      winTars.map(async (p) => {
+        const out = 'windows' + '/' + p.split('/')[1].replace('.tar.gz', '')
+        await fs.ensureDir(out)
+        execa('tar', [...args, p, '-C', out])
+      })
+    )
 
     switch (os.platform()) {
       case 'win32':
         /**
          * In windows system. I decide use Wix to wrapper binrary to msi.
          */
-        console.log('windows')
+        // execa('candle')
+        // execa('light')
         return
       case 'linux':
         /**
