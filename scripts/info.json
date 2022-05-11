@@ -1,5 +1,6 @@
 {
-  "author": "Moderen Magic",
+  "author": "Modern Magic",
   "applicationName": "Grm Windows",
-  "upgradeCode": ""
+  "upgradeCode": "5f25abbf-75c7-4847-91a7-d8ef0e823e95",
+  "envId": "GRM_HOME"
 }
