@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Product Id="*" UpgradeCode="{{.upgradeCode}}" Language="1033" Name="{{.applicationName}}" Manufacturer="{{.author}}" Version="{{.version}}">
+        <Package InstallerVersion="300" Compressed="yes" InstallScope="perMachine" />
+        <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+        <MediaTemplate EmbedCab="yes" />
+        <Feature Id="ProductFeature" Title="{{.applicationName}}" Level="1">
+            <ComponentGroupRef Id="ProductComponents" />
+        </Feature>
+        <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+        <Icon Id="icon.ico" SourceFile="assets/icon.ico" />
+        <Property Id="ARPPRODUCTICON" Value="icon.ico" />
+        <WixVariable Id="WixUILicenseRtf" Value="{{.license}}" />
+        <WixVariable Id="WixUIDialogBmp" Value="{{.dialog}}"/>
+        <WixVariable Id="WixUIBannerBmp" Value="{{.banner}}"/>
+        <UIRef Id="WixUI_InstallDir" />
+    </Product>
+
+    <Fragment>
+        <Directory Id="TARGETDIR" Name="SourceDir">
+            <Directory Id="ProgramFiles64Folder">
+                <Directory Id="INSTALLFOLDER" Name="{{.applicationName}}" />
+            </Directory>
+        </Directory>
+    </Fragment>
+
+    <Fragment>
+        <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+            <Component Id="ProductComponent">
+                <File Source="{{.buildSource}}" />
+                <Environment Id="{{.envId}}" Action="set" Part="last" Name="PATH" Permanent="no" System="no" Value="[INSTALLFOLDER]" />
+            </Component>
+        </ComponentGroup>
+    </Fragment>
+</Wix>

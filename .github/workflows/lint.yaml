@@ -1,6 +1,6 @@
 name: ❄️ Lint
 
-on: [push,pull_request]
+on: [push, pull_request]
 
 jobs:
   markdownlint:
@@ -13,7 +13,7 @@ jobs:
         with:
           node-version: '14.x'
       - run: npm install -g markdownlint-cli@0.25.0
-      - run: markdownlint '**/*.md' --ignore node_modules
+      - run: markdownlint '**/*.md' --ignore node_modules assets
   misspell:
     name: runner/misspell
     runs-on: ubuntu-latest
