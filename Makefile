@@ -1,4 +1,4 @@
-all:	platform-all	upx-all	compress-all
+all:	platform-all	upx-all	compress-all	msi
 
 # opt
 
@@ -81,3 +81,8 @@ compress-linux-32:
 compress-linux-arm64:
 	tar -zcvf build/grm-linux-arm64.tar.gz	-Cbuild/grm-linux-arm64/	grm
 	rm	-rf	build/grm-linux-arm64
+
+
+msi:
+	cd scripts	> package.json	&&	npm	i
+	node scripts/windows-msi.js
