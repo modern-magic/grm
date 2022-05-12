@@ -11,6 +11,10 @@ const os = require('os')
 const msiInfo = require('./info.json')
 const pref_hooks = require('perf_hooks')
 
+/**
+ * We decide only provide x64 msi file for user.
+ */
+
 const main = async () => {
   const star = pref_hooks.performance.now()
   const root = process.cwd()
@@ -19,53 +23,47 @@ const main = async () => {
   try {
     ;[verPath, packedPath].map((p) => fs.existsSync(p))
     const ver = await fs.readFile(verPath, 'utf-8')
-    const winTars = ['build/grm-windows-32.tar.gz', 'build/grm-windows-64.tar.gz', 'build/grm-windows-arm64.tar.gz']
-    const args = ['-zxvf']
-    const windowsDir = []
-    await Promise.all(
-      winTars.map(async (p) => {
-        const out = 'windows' + '/' + p.split('/')[1].replace('.tar.gz', '')
-        windowsDir.push(out)
-        await fs.ensureDir(out)
-        execa('tar', [...args, p, '-C', out])
-      })
-    )
+    const wingz = 'build/grm-windows-64.tar.gz'
+    const wintar = 'windows/grm-windows-64'
+    await fs.ensureDir(wintar)
+    const args = ['-zxvf', wingz, '-C', wintar]
+    await execa('tar', args)
 
     const info = Object.assign({}, msiInfo, { version: ver })
 
     let msiTmpl = await fs.readFile(path.join(root, 'scripts', 'app.wsx.tmpl'), 'utf8')
 
-    // generator all wsx file.
+    // generator wsx file.
 
     Object.keys(info).forEach((c) => {
       const reg = new RegExp(`{{.${c}}}`, 'g')
       msiTmpl = msiTmpl.replace(reg, info[c])
     })
 
-    await Promise.all(
-      windowsDir.map((dir) => {
-        const tpl = msiTmpl.replace('{{.buildSource}}', `${dir}/grm.exe`)
-        const out = path.join(root, dir, 'app.wsx')
-        fs.outputFile(out, tpl, 'utf8')
-      })
-    )
+    const tpl = msiTmpl.replace('{{.buildSource}}', `${wintar}/grm.exe`)
+    fs.outputFileSync(path.join(root, wintar, 'app.wsx'), tpl, 'utf8')
 
     switch (os.platform()) {
       case 'win32':
-        await Promise.all(
-          windowsDir.map(async (win) => {
-            await execa('candle.exe', ['-o', `${win}/app.wixobj`, `${win}/app.wsx`, '-ext', 'WixUtilExtension'])
-            await execa('light.exe', [
-              `${win}/app.wixobj`,
-              '-o',
-              `${win}/app.msi`,
-              '-ext',
-              'WixUIExtension',
-              '-ext',
-              'WixUtilExtension',
-            ])
-          })
-        )
+        await execa('candle.exe', [
+          '-o',
+          `${wintar}/app.wixobj`,
+          `${wintar}/app.wsx`,
+          '-arch',
+          'x64',
+          '-ext',
+          'WixUtilExtension',
+        ])
+        await execa('light.exe', [
+          `${wintar}/app.wixobj`,
+          '-o',
+          `${wintar}/grm-installer-64.msi`,
+          '-ext',
+          'WixUIExtension',
+          '-ext',
+          'WixUtilExtension',
+        ])
+        await fs.copy(`${wintar}/grm-installer-64.msi`, 'build/grm-installer-64.msi')
         break
       case 'linux':
         /**
@@ -82,6 +80,7 @@ const main = async () => {
     console.log(error)
     process.exit(1)
   } finally {
+    await fs.remove('windows')
     const end = pref_hooks.performance.now() - star
     console.log('\x1b[36m%s \x1b[36m\x1b[0m', `✨ genreator all msi installer use ${Math.ceil(end)}ms.\n`)
   }
