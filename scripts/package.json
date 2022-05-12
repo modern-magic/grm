@@ -1,9 +1,6 @@
 {
   "private": "true",
   "author": "Kanno",
-  "scripts": {
-    "msi": "node windwos-msi.js"
-  },
   "devDependencies": {
     "execa": "^5.1.1",
     "fs-extra": "^10.1.0"

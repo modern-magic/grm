@@ -8,8 +8,11 @@
             <ComponentGroupRef Id="ProductComponents" />
         </Feature>
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
-        <Icon Id="icon.ico" SourceFile="scripts/icon.ico" />
+        <Icon Id="icon.ico" SourceFile="assets/icon.ico" />
         <Property Id="ARPPRODUCTICON" Value="icon.ico" />
+        <WixVariable Id="WixUILicenseRtf" Value="{{.license}}" />
+        <WixVariable Id="WixUIDialogBmp" Value="{{.dialog}}"/>
+        <WixVariable Id="WixUIBannerBmp" Value="{{.banner}}"/>
         <UIRef Id="WixUI_InstallDir" />
     </Product>
 
