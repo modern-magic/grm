@@ -1,19 +1,28 @@
 name: grm-releaser
 
-on:
-  push:
-    tags: ['v*']
+on: [push, pull_request]
 
 jobs:
   grm-releaser:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2
         with:
-          go-version: 1.17
+          go-version: 1.18
+      - name: Set up MinGW
+        uses: egor-tensin/setup-mingw@v2
+        with:
+          platform: x64
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: install chocolatey
+        run: Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+      - name: install upx
+        run: choco install upx
       - name: Make All
-        run: make
+        run: mingw32-make
       - name: Create Github Release
         uses: actions/create-release@v1
         env:
