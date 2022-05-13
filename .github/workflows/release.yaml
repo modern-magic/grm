@@ -20,7 +20,7 @@ jobs:
       - name: install chocolatey
         run: Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
       - name: install upx
-        run: choco install upx
+        run: choco install upx wixtoolset
       - name: Make All
         run: mingw32-make
       - name: Create Github Release
