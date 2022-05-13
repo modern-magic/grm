@@ -28,7 +28,7 @@ jobs:
         run: choco install upx wixtoolset
 
       - name: Set environment variable
-        run: "setx path '%path%;C:\Program Files (x86)\\WiX Toolset v3.11\\bin\\'"
+        run: setx Path "%Path%;C:\Program Files (x86)\\WiX Toolset v3.12\\bin\\"
         shell: cmd
 
       - name: Make All
