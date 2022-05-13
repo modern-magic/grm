@@ -13,7 +13,7 @@ Use smaller dependencies than [nrm](https://github.com/Pana/nrm).
 
 ## Install
 
-- Using [homebrew](https://brew.sh/)
+Using [homebrew](https://brew.sh/)
 
 ```bash
 
@@ -21,7 +21,7 @@ $ brew install modern-magic/tap/grm
 
 ```
 
-- Using [Go](https://golang.org/):
+Using [Go](https://golang.org/):
 
 ```bash
 
@@ -29,7 +29,7 @@ $ go install github.com/modern-magic/grm/cmd/grm@latest
 
 ```
 
-Or download a [binary package](https://github.com/modern-magic/grm/releases/latest).
+Or you can download a [binary package or msi package](https://github.com/modern-magic/grm/releases/latest).
 
 ## Usage
 
@@ -55,15 +55,19 @@ Commands:
 
 > What is grm?
 
-- A minimalist npm source manager.
+A minimalist npm source manager.
 
 > Why new nrm?
 
-- Installing `nrm` is too slow, and `grm` can be fast.
+Installing `nrm` is too slow, and `grm` can be fast.
 
 > Why not so comprehensive
 
-- Because we are only source manager.
+Because we are only source manager.
+
+> Why choose grm?
+
+Compress to `nrm` and `nnrm` . `grm` has more advantages in installing. Benefit from golang cross platform.
 
 ## All Contributors
 
