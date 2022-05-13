@@ -1,6 +1,8 @@
 name: grm-releaser
 
-on: [push, pull_request]
+on:
+  push:
+    tags: ['v*']
 
 jobs:
   grm-releaser:
