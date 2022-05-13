@@ -84,5 +84,5 @@ compress-linux-arm64:
 
 
 msi:
-	cd scripts	> package.json	&&	npm	i
+	cd scripts	&&	npm	i
 	node scripts/windows-msi.js
