@@ -33,7 +33,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Check for trailing whitespace
-        run: "! git grep -EIn $'[ \t]+$'"
+        run: "! git grep  -EIn $'[ \t]+$' ':(exclude)assets'"
   golangci-lint:
     runs-on: ubuntu-latest
     steps:
