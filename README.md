@@ -69,6 +69,10 @@ Because we are only source manager.
 
 Compress to `nrm` and `nnrm` . `grm` has more advantages in installing. Benefit from golang cross platform.
 
+> Why do I get a virus report when I use the msi installation package?
+
+We use upx to pack grm. So in some antivirus software will report it have a virus. But you can use it with confidence. grm is a poison free program :)
+
 ## All Contributors
 
 Thanks to the following friends for their contributions to Grm:

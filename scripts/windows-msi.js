@@ -65,16 +65,8 @@ const main = async () => {
         ])
         await fs.copy(`${wintar}/grm-installer-64.msi`, 'build/grm-installer-64.msi')
         break
-      case 'linux':
-        /**
-         * In linux system. Can use wixl to build msi installer.
-         * You can view docs here:http://manpages.ubuntu.com/manpages/bionic/man1/wixl.1.html
-         * I'm not sure darwin system can use wixl. If you found darwin system can use wixl too.
-         * You can modify this branch. Make it better :)
-         */
-        break
       default:
-        throw new Error("can't capture platform, process will exit.")
+        throw new Error("Can't run on platforms other than Windows.")
     }
   } catch (error) {
     console.log(error)
