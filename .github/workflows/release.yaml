@@ -7,22 +7,33 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
+
       - uses: actions/setup-go@v2
         with:
           go-version: 1.18
+
       - name: Set up MinGW
         uses: egor-tensin/setup-mingw@v2
         with:
           platform: x64
-      - uses: actions/setup-node@v3
+      - name: Set up Node
+        uses: actions/setup-node@v3
         with:
           node-version: 16
-      - name: install chocolatey
+
+      - name: Install chocolatey
         run: Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-      - name: install upx
+
+      - name: Install package tools
         run: choco install upx wixtoolset
+
+      - name: Set environment variable
+        run: "setx path '%path%;C:\Program Files (x86)\\WiX Toolset v3.11\\bin\\'"
+        shell: cmd
+
       - name: Make All
         run: mingw32-make
+
       - name: Create Github Release
         uses: actions/create-release@v1
         env:
@@ -31,6 +42,7 @@ jobs:
           tag_name: ${{ github.ref }}
           draft: false
           prerelease: false
+
       - name: Upload release binaries
         uses: alexellis/upload-assets@0.2.2
         env:
