@@ -27,13 +27,11 @@ jobs:
       - name: Install package tools
         run: choco install upx wixtoolset
 
-      - name: Set environment variable
-        run: setx Path "%Path%;C:\Program Files (x86)\WiX Toolset v3.11\bin\"
-        shell: cmd
-
       - name: Make All
-        run: mingw32-make
-        shell: powershell
+        run: |
+         set Path=%Path%;C:\Program Files (x86)\WiX Toolset v3.11\bin\
+         mingw32-make
+        shell: cmd
 
       - name: Create Github Release
         uses: actions/create-release@v1
