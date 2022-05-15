@@ -138,7 +138,7 @@ func AddRegistry(source *registry.RegistryDataSource, args []string) int {
 type FetchState uint8
 
 const (
-	SUCESS FetchState = 1 << iota
+	SUCCESS FetchState = 1 << iota
 	TIME_LIMIT
 	FAIL
 )
@@ -194,7 +194,7 @@ func FetchRegistry(source *registry.RegistryDataSource, args []string) int {
 			if res.StatusCode != 200 {
 				return FAIL, log
 			}
-			return SUCESS, log
+			return SUCCESS, log
 		}
 
 		sendFetchResult(fetchImpl, ch, &wg)
@@ -213,7 +213,7 @@ func printFetchResult(wg *sync.WaitGroup, ch chan ChannelStorage) {
 			logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
 				return fmt.Sprintf("%s%s%s", c.Dim, m.log, c.Reset)
 			})
-		case SUCESS:
+		case SUCCESS:
 			logger.Success(m.log)
 		case FAIL:
 			logger.Error(m.log)
