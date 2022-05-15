@@ -6,3 +6,6 @@ grm.exe
 node_modules
 
 windows
+
+.vscode
+.idea

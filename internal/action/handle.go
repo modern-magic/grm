@@ -135,11 +135,28 @@ func AddRegistry(source *registry.RegistryDataSource, args []string) int {
 	return 0
 }
 
+type FetchState uint8
+
+const (
+	SUCESS FetchState = 1 << iota
+	TIME_LIMIT
+	FAIL
+)
+
+type ChannelStorage struct {
+	state FetchState
+	log   string
+}
+
 func FetchRegistry(source *registry.RegistryDataSource, args []string) int {
 
 	keys := make([]string, 0)
 
 	var wg sync.WaitGroup
+
+	goCount := 5
+
+	ch := make(chan ChannelStorage)
 
 	if len(args) == 0 {
 		keys = append(keys, source.Keys...)
@@ -152,42 +169,68 @@ func FetchRegistry(source *registry.RegistryDataSource, args []string) int {
 			return 1
 		}
 	}
+
+	for i := 0; i < goCount; i++ {
+		go printFetchResult(&wg, ch)
+	}
+
 	for _, key := range keys {
-		wg.Add(1)
-		go fetchRegistryImpl(source.Registry[key], key, &wg)
+		fetchImpl := func() (FetchState, string) {
+			url := source.Registry[key]
+			log := internal.StringJoin("[Grm]: fetch", key)
+			res := internal.Fetch(url)
+
+			if res.IsTimeout {
+				log = internal.StringJoin(log, "state", res.Status)
+			} else {
+				log = internal.StringJoin(log, fmt.Sprintf("%.2f%s", res.Time, "s"), "state:", res.Status)
+			}
+			log = internal.StringJoin(log, registry.Eol())
+
+			if res.IsTimeout {
+				return TIME_LIMIT, log
+			}
+
+			if res.StatusCode != 200 {
+				return FAIL, log
+			}
+			return SUCESS, log
+		}
+
+		sendFetchResult(fetchImpl, ch, &wg)
+
 	}
 
 	wg.Wait()
 	return 0
 }
 
-func fetchRegistryImpl(uri, name string, wg *sync.WaitGroup) {
-	ctx := internal.Fetch(uri)
-	log := "[Grm]: fetch " + name
+func printFetchResult(wg *sync.WaitGroup, ch chan ChannelStorage) {
+	for m := range ch {
 
-	isTimeout := ctx.IsTimeout
+		switch m.state {
+		case TIME_LIMIT:
+			logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
+				return fmt.Sprintf("%s%s%s", c.Dim, m.log, c.Reset)
+			})
+		case SUCESS:
+			logger.Success(m.log)
+		case FAIL:
+			logger.Error(m.log)
+		}
 
-	if isTimeout {
-		log = internal.StringJoin(log, "state", ctx.Status)
-	} else {
-		log = internal.StringJoin(log, fmt.Sprintf("%.2f%s", ctx.Time, "s"), "state:", ctx.Status)
+		wg.Done()
 	}
 
-	log = log + registry.Eol()
+}
 
-	defer wg.Done()
+func sendFetchResult(f func() (FetchState, string), ch chan ChannelStorage, wg *sync.WaitGroup) {
 
-	if isTimeout {
-		logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
-			return fmt.Sprintf("%s%s%s", c.Dim, log, c.Reset)
-		})
-		return
-	}
-
-	if ctx.StatusCode != 200 {
-		logger.Error(log)
-	} else {
-		logger.Success(log)
+	state, log := f()
+	wg.Add(1)
+	ch <- ChannelStorage{
+		state,
+		log,
 	}
 }
 
