@@ -173,8 +173,8 @@ func FetchRegistry(source *registry.RegistryDataSource, args []string) int {
 	for i := 0; i < goCount; i++ {
 		go printFetchResult(&wg, ch)
 	}
-
-	for _, key := range keys {
+	for i := 0; i < len(keys); i++ {
+		key := keys[i]
 		fetchImpl := func() (FetchState, string) {
 			url := source.Registry[key]
 			log := internal.StringJoin("[Grm]: fetch", key)
@@ -196,18 +196,16 @@ func FetchRegistry(source *registry.RegistryDataSource, args []string) int {
 			}
 			return SUCCESS, log
 		}
-
-		sendFetchResult(fetchImpl, ch, &wg)
+		wg.Add(1)
+		sendFetchResult(fetchImpl, ch)
 
 	}
-
 	wg.Wait()
 	return 0
 }
 
 func printFetchResult(wg *sync.WaitGroup, ch chan ChannelStorage) {
 	for m := range ch {
-
 		switch m.state {
 		case TIME_LIMIT:
 			logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
@@ -224,14 +222,14 @@ func printFetchResult(wg *sync.WaitGroup, ch chan ChannelStorage) {
 
 }
 
-func sendFetchResult(f func() (FetchState, string), ch chan ChannelStorage, wg *sync.WaitGroup) {
-
-	state, log := f()
-	wg.Add(1)
-	ch <- ChannelStorage{
-		state,
-		log,
-	}
+func sendFetchResult(f func() (FetchState, string), ch chan ChannelStorage) {
+	go func() {
+		state, log := f()
+		ch <- ChannelStorage{
+			state,
+			log,
+		}
+	}()
 }
 
 func addRegistryImpl(name, uri, home string) error {
