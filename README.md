@@ -18,8 +18,8 @@ Using [homebrew](https://brew.sh/)
 ```bash
 
 $ brew install modern-magic/tap/grm
-$ echo "unalias grm" >> ~/.bashrc # 可选。若其他程序（如'git'）使用了'grm'作为别名。
-$ source ~/.bashrc # 或者 source ~/.zshrc
+$ echo "unalias grm" >> ~/.bashrc # Optional。If other programs (such as 'git') use 'grm' as an alias.
+$ source ~/.bashrc # or source ~/.zshrc
 ```
 
 Using [Go](https://golang.org/):
