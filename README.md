@@ -18,7 +18,8 @@ Using [homebrew](https://brew.sh/)
 ```bash
 
 $ brew install modern-magic/tap/grm
-
+$ echo "unalias grm" >> ~/.bashrc # 可选。若其他程序（如'git'）使用了'grm'作为别名。
+$ source ~/.bashrc # 或者 source ~/.zshrc
 ```
 
 Using [Go](https://golang.org/):
@@ -72,6 +73,10 @@ Compress to `nrm` and `nnrm` . `grm` has more advantages in installing. Benefit 
 > Why do I get a virus report when I use the msi installation package?
 
 We use upx to pack grm. So in some antivirus software will report it have a virus. But you can use it with confidence. grm is a poison free program :)
+
+> Why does it not work when I use brew installation on linux?
+
+In some distributions, `git` uses many aliases, including `grm`, so we need to `unalias grm` and then it will work.
 
 ## All Contributors
 
