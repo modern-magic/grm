@@ -62,8 +62,7 @@ func runImpl(args []string) int {
 
 	// initlize nrm & npm preset source.
 	sources := newRegistrySourceData()
-	parserSourceForRun(args, &sources)
-	return 0
+	return parserSourceForRun(args, &sources)
 }
 
 func parserSourceForRun(args []string, source *registry.RegistryDataSource) int {
@@ -94,7 +93,7 @@ func parserSourceForRun(args []string, source *registry.RegistryDataSource) int 
 		case "use":
 			return action.SetCurrent(source, args[1:])
 		case "add":
-			return action.AddRegistry(source,args[1:])
+			return action.AddRegistry(source, args[1:])
 		case "del":
 			return action.DelRegistry(source, args[1:])
 		case "test":
