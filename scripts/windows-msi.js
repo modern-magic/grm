@@ -16,7 +16,14 @@ const pref_hooks = require('perf_hooks')
  */
 
 const main = async () => {
-    if (os.platform() !== 'win32') throw new Error("Can't run on platforms other than Windows.")
+    /**
+     * Process exit can't be use here. windows-msi will use in makefile. If
+     * we let the process break will affect the result of the makefile.
+     */
+    if (os.platform() !== 'win32') {
+        console.error("Can't run on platforms other than Windows.")
+        return 1
+    }
     const star = pref_hooks.performance.now()
     const root = process.cwd()
     const verPath = path.join(root, 'version.txt')
