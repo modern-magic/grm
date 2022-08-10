@@ -64,7 +64,7 @@ func SetCurrent(source *registry.RegistryDataSource, args []string) int {
 		logger.Error(internal.StringJoin(err.Error(), registry.Eol()))
 		return 1
 	}
-	err = registry.WriteNrm("", uri, "")
+	err = registry.WriteNpm(uri)
 	if err != nil {
 		logger.Error(internal.StringJoin("[Grm]: error with", err.Error(), registry.Eol()))
 		return 1
