@@ -17,7 +17,7 @@ func getCurrent() string {
 	return registry.ReadNpm()
 }
 
-func ShowSources(source *registry.RegistryDataSource) {
+func ShowSources(source *registry.RegistryDataSource) int {
 
 	outLen := len(source.Keys) + 3
 
@@ -39,14 +39,15 @@ func ShowSources(source *registry.RegistryDataSource) {
 
 		}
 	}
-
+	return 0
 }
 
 // show current registry uri and alias
 
-func ShowCurrent() {
+func ShowCurrent() int {
 	cur := getCurrent()
 	logger.Info(internal.StringJoin("[Grm]: you are using", cur))
+	return 0
 }
 
 func SetCurrent(source *registry.RegistryDataSource, args []string) int {

@@ -85,11 +85,9 @@ func parserSourceForRun(args []string, source *registry.RegistryDataSource) int 
 	for _, arg := range args {
 		switch arg {
 		case "ls":
-			action.ShowSources(source)
-			return 0
+			return action.ShowSources(source)
 		case "current":
-			action.ShowCurrent()
-			return 0
+			return action.ShowCurrent()
 		case "use":
 			return action.SetCurrent(source, args[1:])
 		case "add":
