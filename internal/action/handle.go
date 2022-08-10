@@ -110,42 +110,41 @@ func getRegistryMeta(name string, source map[string]string, callback func(name s
 
 func AddRegistry(source *registry.RegistryDataSource, args []string) int {
 
-	name := ""
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Warn("[Grm]: Plese pass an alias.")
+			return
+		}
+	}()
+
+	name := internal.PickArgs(args, 0)
+	uri := internal.PickArgs(args, 1)
 	home := ""
-	uri := ""
 
-	if len(args) <= 1 {
-		logger.Error(internal.StringJoin("[Grm]: name and registry url is must be entry", registry.Eol()))
-		return 1
-	}
-	name = args[0]
-
-	if _, ok := source.UserRegistry[name]; ok {
-		logger.Error("[Grm]: can't be the same as the default source name!")
+	if _, ok := source.Registry[name]; ok {
+		logger.Error("[Grm]: alias already exist")
 		return 1
 	}
 
-	uri = args[1]
 	if len(args) == 2 {
 		home = uri
 	}
 	if len(args) >= 3 {
-		home = args[2]
+		home = internal.PickArgs(args, 2)
 	}
 
 	if !internal.IsUri(uri) && !internal.IsUri(home) {
 		logger.Error("[Grm]: please verify the uri address you entered.")
 		return 1
 	}
-
-	err := addRegistryImpl(name, uri, home)
-
-	if err != nil {
+	if err := addRegistryImpl(name, uri, home); err != nil {
 		logger.Error(internal.StringJoin("[Grm]: add registry fail", err.Error(), registry.Eol()))
 		return 1
 	}
+
 	logger.Success(internal.StringJoin("[Grm]: add registry success!", registry.Eol()))
 	return 0
+
 }
 
 type FetchState uint8

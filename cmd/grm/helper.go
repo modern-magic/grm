@@ -19,10 +19,10 @@ Options:
 Commands:
   ls                                      List all the registries
   current                                 Show current registry name
-  use <name>                              Change registry to registry
+  use  <name>                              Change registry to registry
   test <name>                             Test response time for specific or all registries
-  add <name> <registry> [home]            Add one custom registry
-  del <name>                              Delete one custom registry by alias
+  add  <name> <registry> [home]            Add one custom registry
+  del  <name>                              Delete one custom registry by alias
   help                                    Print this help
 `
 
