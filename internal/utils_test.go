@@ -32,3 +32,13 @@ func TestIsUri(t *testing.T) {
 	}
 
 }
+
+func TestPickArgs(t *testing.T) {
+	args := []string{"a", "b", "c"}
+	cursor := 1
+	v := internal.PickArgs(args, cursor)
+	if v != "b" {
+		t.Errorf("Expected: %s, Actual: %s", "b", v)
+	}
+
+}

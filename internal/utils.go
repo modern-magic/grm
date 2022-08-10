@@ -20,5 +20,5 @@ func PickArgs(args []string, ptr int) string {
 	if len(args) >= ptr {
 		return args[ptr]
 	}
-	panic("Invalid prt")
+	panic("Invalid ptr")
 }
