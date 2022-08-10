@@ -1,6 +1,7 @@
 package action
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"os"
@@ -49,50 +50,62 @@ func ShowCurrent() {
 }
 
 func SetCurrent(source *registry.RegistryDataSource, args []string) int {
-
-	name := "npm"
-
-	if len(args) >= 1 {
-		name = args[0]
-	}
-	uri, ok := source.Registry[name]
-	if !ok {
-		logger.Error(internal.StringJoin("[Grm]: Can't found alias", name, "in your .nrmrc file. Please check it exist.", registry.Eol()))
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Warn("[Grm]: Plese pass an alias.")
+			return
+		}
+	}()
+	name := internal.PickArgs(args, 0)
+	uri, err := getRegistryMeta(name, source.Registry, func(n string) (string, error) {
+		return "", errors.New(internal.StringJoin("[Grm]: Can't found alias", name, "in your .nrmrc file. Please check it exist."))
+	})
+	if err != nil {
+		logger.Error(internal.StringJoin(err.Error(), registry.Eol()))
 		return 1
 	}
-	err := registry.WriteNpm(uri)
+	err = registry.WriteNrm("", uri, "")
 	if err != nil {
 		logger.Error(internal.StringJoin("[Grm]: error with", err.Error(), registry.Eol()))
 		return 1
 	}
 	logger.Success(internal.StringJoin("[Grm]: use", name, "success~", registry.Eol()))
 	return 0
+
 }
 
 // del .nrm file registry alias
 
 func DelRegistry(source *registry.RegistryDataSource, args []string) int {
-
-	if len(args) == 0 {
-		return 0
-	}
-	name := args[0]
-
-	_, ok := source.UserRegistry[name]
-
-	if !ok {
-		logger.Error(internal.StringJoin("[Grm]: Can't found alias", name, "in your .nrmrc file. Please check it exist.", registry.Eol()))
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Warn("[Grm]: Plese pass an alias.")
+			return
+		}
+	}()
+	name := internal.PickArgs(args, 0)
+	_, err := getRegistryMeta(name, source.UserRegistry, func(n string) (string, error) {
+		return "", errors.New(internal.StringJoin("[Grm]: Can't found alias", name, "in your .nrmrc file. Please check it exist."))
+	})
+	if err != nil {
+		logger.Error(internal.StringJoin(err.Error(), registry.Eol()))
 		return 1
 	}
-	err := registry.DelNrm(name)
+	err = registry.DelNrm(name)
 	if err != nil {
 		logger.Error(internal.StringJoin("[Grm]: del registry fail", err.Error(), registry.Eol()))
 		return 1
-
 	}
 	logger.Success(internal.StringJoin("[Grm]: del registry", name, "success!", registry.Eol()))
 	return 0
+}
 
+func getRegistryMeta(name string, source map[string]string, callback func(name string) (string, error)) (string, error) {
+	meta, ok := source[name]
+	if !ok {
+		return callback(name)
+	}
+	return meta, nil
 }
 
 func AddRegistry(source *registry.RegistryDataSource, args []string) int {

@@ -15,3 +15,10 @@ var uriReg = regexp.MustCompile(`(^https?:\/\/(www\.))?[-a-zA-Z0-9@:%._\+~#=]{2,
 func IsUri(uri string) bool {
 	return uriReg.MatchString(uri)
 }
+
+func PickArgs(args []string, ptr int) string {
+	if len(args) >= ptr {
+		return args[ptr]
+	}
+	panic("Invalid prt")
+}
