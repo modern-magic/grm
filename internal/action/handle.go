@@ -52,7 +52,7 @@ func ShowCurrent() {
 func SetCurrent(source *registry.RegistryDataSource, args []string) int {
 	defer func() {
 		if err := recover(); err != nil {
-			logger.Warn("[Grm]: Plese pass an alias.")
+			logger.Warn(internal.StringJoin("[Grm]: Plese pass an alias.", registry.Eol()))
 			return
 		}
 	}()
@@ -79,7 +79,7 @@ func SetCurrent(source *registry.RegistryDataSource, args []string) int {
 func DelRegistry(source *registry.RegistryDataSource, args []string) int {
 	defer func() {
 		if err := recover(); err != nil {
-			logger.Warn("[Grm]: Plese pass an alias.")
+			logger.Warn(internal.StringJoin("[Grm]: Plese pass an alias.", registry.Eol()))
 			return
 		}
 	}()
@@ -112,7 +112,7 @@ func AddRegistry(source *registry.RegistryDataSource, args []string) int {
 
 	defer func() {
 		if err := recover(); err != nil {
-			logger.Warn("[Grm]: Plese pass an alias.")
+			logger.Warn(internal.StringJoin("[Grm]: Plese pass an alias.", registry.Eol()))
 			return
 		}
 	}()
@@ -122,7 +122,7 @@ func AddRegistry(source *registry.RegistryDataSource, args []string) int {
 	home := ""
 
 	if _, ok := source.Registry[name]; ok {
-		logger.Error("[Grm]: alias already exist")
+		logger.Error(internal.StringJoin("[Grm]: alias already exist.", registry.Eol()))
 		return 1
 	}
 
