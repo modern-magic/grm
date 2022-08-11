@@ -1,6 +1,7 @@
 package action
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"os"
@@ -16,7 +17,7 @@ func getCurrent() string {
 	return registry.ReadNpm()
 }
 
-func ShowSources(source *registry.RegistryDataSource) {
+func ShowSources(source *registry.RegistryDataSource) int {
 
 	outLen := len(source.Keys) + 3
 
@@ -38,101 +39,113 @@ func ShowSources(source *registry.RegistryDataSource) {
 
 		}
 	}
-
+	return 0
 }
 
 // show current registry uri and alias
 
-func ShowCurrent() {
+func ShowCurrent() int {
 	cur := getCurrent()
 	logger.Info(internal.StringJoin("[Grm]: you are using", cur))
+	return 0
 }
 
 func SetCurrent(source *registry.RegistryDataSource, args []string) int {
-
-	name := "npm"
-
-	if len(args) >= 1 {
-		name = args[0]
-	}
-	uri, ok := source.Registry[name]
-	if !ok {
-		logger.Error(internal.StringJoin("[Grm]: Can't found alias", name, "in your .nrmrc file. Please check it exist.", registry.Eol()))
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Warn(internal.StringJoin("[Grm]: Plese pass an alias.", registry.Eol()))
+			return
+		}
+	}()
+	name := internal.PickArgs(args, 0)
+	uri, err := getRegistryMeta(name, source.Registry, func(n string) (string, error) {
+		return "", errors.New(internal.StringJoin("[Grm]: Can't found alias", name, "in your .nrmrc file. Please check it exist."))
+	})
+	if err != nil {
+		logger.Error(internal.StringJoin(err.Error(), registry.Eol()))
 		return 1
 	}
-	err := registry.WriteNpm(uri)
+	err = registry.WriteNpm(uri)
 	if err != nil {
 		logger.Error(internal.StringJoin("[Grm]: error with", err.Error(), registry.Eol()))
 		return 1
 	}
 	logger.Success(internal.StringJoin("[Grm]: use", name, "success~", registry.Eol()))
 	return 0
+
 }
 
 // del .nrm file registry alias
 
 func DelRegistry(source *registry.RegistryDataSource, args []string) int {
-
-	if len(args) == 0 {
-		return 0
-	}
-	name := args[0]
-
-	_, ok := source.UserRegistry[name]
-
-	if !ok {
-		logger.Error(internal.StringJoin("[Grm]: Can't found alias", name, "in your .nrmrc file. Please check it exist.", registry.Eol()))
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Warn(internal.StringJoin("[Grm]: Plese pass an alias.", registry.Eol()))
+			return
+		}
+	}()
+	name := internal.PickArgs(args, 0)
+	_, err := getRegistryMeta(name, source.UserRegistry, func(n string) (string, error) {
+		return "", errors.New(internal.StringJoin("[Grm]: Can't found alias", name, "in your .nrmrc file. Please check it exist."))
+	})
+	if err != nil {
+		logger.Error(internal.StringJoin(err.Error(), registry.Eol()))
 		return 1
 	}
-	err := registry.DelNrm(name)
+	err = registry.DelNrm(name)
 	if err != nil {
 		logger.Error(internal.StringJoin("[Grm]: del registry fail", err.Error(), registry.Eol()))
 		return 1
-
 	}
 	logger.Success(internal.StringJoin("[Grm]: del registry", name, "success!", registry.Eol()))
 	return 0
+}
 
+func getRegistryMeta(name string, source map[string]string, callback func(name string) (string, error)) (string, error) {
+	meta, ok := source[name]
+	if !ok {
+		return callback(name)
+	}
+	return meta, nil
 }
 
 func AddRegistry(source *registry.RegistryDataSource, args []string) int {
 
-	name := ""
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Warn(internal.StringJoin("[Grm]: Plese pass an alias.", registry.Eol()))
+			return
+		}
+	}()
+
+	name := internal.PickArgs(args, 0)
+	uri := internal.PickArgs(args, 1)
 	home := ""
-	uri := ""
 
-	if len(args) <= 1 {
-		logger.Error(internal.StringJoin("[Grm]: name and registry url is must be entry", registry.Eol()))
-		return 1
-	}
-	name = args[0]
-
-	if _, ok := source.UserRegistry[name]; ok {
-		logger.Error("[Grm]: can't be the same as the default source name!")
+	if _, ok := source.Registry[name]; ok {
+		logger.Error(internal.StringJoin("[Grm]: alias already exist.", registry.Eol()))
 		return 1
 	}
 
-	uri = args[1]
 	if len(args) == 2 {
 		home = uri
 	}
 	if len(args) >= 3 {
-		home = args[2]
+		home = internal.PickArgs(args, 2)
 	}
 
 	if !internal.IsUri(uri) && !internal.IsUri(home) {
 		logger.Error("[Grm]: please verify the uri address you entered.")
 		return 1
 	}
-
-	err := addRegistryImpl(name, uri, home)
-
-	if err != nil {
+	if err := addRegistryImpl(name, uri, home); err != nil {
 		logger.Error(internal.StringJoin("[Grm]: add registry fail", err.Error(), registry.Eol()))
 		return 1
 	}
+
 	logger.Success(internal.StringJoin("[Grm]: add registry success!", registry.Eol()))
 	return 0
+
 }
 
 type FetchState uint8
