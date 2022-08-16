@@ -51,33 +51,33 @@ func ShowCurrent() int {
 }
 
 func SetCurrent(source *registry.RegistryDataSource, args []string) int {
-	defer func() {
-		if err := recover(); err != nil {
-			logger.Warn(internal.StringJoin("[Grm]: Plese pass an alias.", registry.Eol()))
-			return
+	return loadRegistry(source.Registry, args, func(name string) int {
+		err := registry.WriteNpm(name)
+		if err != nil {
+			logger.Error(internal.StringJoin("[Grm]: use registry fail", err.Error(), registry.Eol()))
+			return 1
 		}
-	}()
-	name := internal.PickArgs(args, 0)
-	uri, err := getRegistryMeta(name, source.Registry, func(n string) (string, error) {
-		return "", errors.New(internal.StringJoin("[Grm]: Can't found alias", name, "in your .nrmrc file. Please check it exist."))
+		logger.Success(internal.StringJoin("[Grm]: use", name, "success!", registry.Eol()))
+		return 0
 	})
-	if err != nil {
-		logger.Error(internal.StringJoin(err.Error(), registry.Eol()))
-		return 1
-	}
-	err = registry.WriteNpm(uri)
-	if err != nil {
-		logger.Error(internal.StringJoin("[Grm]: error with", err.Error(), registry.Eol()))
-		return 1
-	}
-	logger.Success(internal.StringJoin("[Grm]: use", name, "success~", registry.Eol()))
-	return 0
 
 }
 
 // del .nrm file registry alias
 
 func DelRegistry(source *registry.RegistryDataSource, args []string) int {
+	return loadRegistry(source.UserRegistry, args, func(name string) int {
+		err := registry.DelNrm(name)
+		if err != nil {
+			logger.Error(internal.StringJoin("[Grm]: del registry fail", err.Error(), registry.Eol()))
+			return 1
+		}
+		logger.Success(internal.StringJoin("[Grm]: del registry", name, "success!", registry.Eol()))
+		return 0
+	})
+}
+
+func loadRegistry(source map[string]string, args []string, callback func(name string) int) int {
 	defer func() {
 		if err := recover(); err != nil {
 			logger.Warn(internal.StringJoin("[Grm]: Plese pass an alias.", registry.Eol()))
@@ -85,20 +85,14 @@ func DelRegistry(source *registry.RegistryDataSource, args []string) int {
 		}
 	}()
 	name := internal.PickArgs(args, 0)
-	_, err := getRegistryMeta(name, source.UserRegistry, func(n string) (string, error) {
+	_, err := getRegistryMeta(name, source, func(n string) (string, error) {
 		return "", errors.New(internal.StringJoin("[Grm]: Can't found alias", name, "in your .nrmrc file. Please check it exist."))
 	})
 	if err != nil {
 		logger.Error(internal.StringJoin(err.Error(), registry.Eol()))
 		return 1
 	}
-	err = registry.DelNrm(name)
-	if err != nil {
-		logger.Error(internal.StringJoin("[Grm]: del registry fail", err.Error(), registry.Eol()))
-		return 1
-	}
-	logger.Success(internal.StringJoin("[Grm]: del registry", name, "success!", registry.Eol()))
-	return 0
+	return callback(name)
 }
 
 func getRegistryMeta(name string, source map[string]string, callback func(name string) (string, error)) (string, error) {
