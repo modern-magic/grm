@@ -40,24 +40,24 @@ func PrintTextWithColor(file *os.File, callback func(Colors) string) {
 
 func Info(text string) {
 	PrintTextWithColor(os.Stdout, func(c Colors) string {
-		return fmt.Sprintf("%s%s%s", c.Blue, text, c.Reset)
+		return fmt.Sprintf("%s%s%s\n", c.Blue, text, c.Reset)
 	})
 }
 
 func Error(text string) {
 	PrintTextWithColor(os.Stderr, func(c Colors) string {
-		return fmt.Sprintf("%s%s%s", c.Red, text, c.Reset)
+		return fmt.Sprintf("%s%s%s\n", c.Red, text, c.Reset)
 	})
 }
 
 func Success(text string) {
 	PrintTextWithColor(os.Stdout, func(c Colors) string {
-		return fmt.Sprintf("%s%s%s", c.Green, text, c.Reset)
+		return fmt.Sprintf("%s%s%s\n", c.Green, text, c.Reset)
 	})
 }
 
 func Warn(text string) {
 	PrintTextWithColor(os.Stdout, func(c Colors) string {
-		return fmt.Sprintf("%s%s%s", c.Yellow, text, c.Reset)
+		return fmt.Sprintf("%s%s%s\n", c.Yellow, text, c.Reset)
 	})
 }
