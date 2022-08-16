@@ -13,16 +13,16 @@ import (
 var helperInfo = `Usage: Grm [options] [command]
 
 Options:
-  -v, --version                           output the version number
-  -h, --help                              output usage information
+  -v, --version                           Output the version number
+  -h, --help                              Output usage information
 
 Commands:
   ls                                      List all the registries
   current                                 Show current registry name
-  use  <name>                              Change registry to registry
+  use  <name>                             Change registry to registry
   test <name>                             Test response time for specific or all registries
-  add  <name> <registry> [home]            Add one custom registry
-  del  <name>                              Delete one custom registry by alias
+  add  <name> <registry> [home]           Add one custom registry
+  del  <name>                             Delete one custom registry by alias
   help                                    Print this help
 `
 
