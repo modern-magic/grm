@@ -13,17 +13,6 @@ func isWin() bool {
 	return runtime.GOOS == "windows"
 }
 
-func eol() string {
-	if isWin() {
-		return "\r\n"
-	}
-	return "\n"
-}
-
-func Eol() string {
-	return eol()
-}
-
 func GetSystemPreffix() string {
 	if isWin() {
 		return os.Getenv("USERPROFILE")
