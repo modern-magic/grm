@@ -74,7 +74,7 @@ func SetCurrent(source *registry.RegistryDataSource, args []string) int {
 
 func DelRegistry(source *registry.RegistryDataSource, args []string) int {
 	return loadRegistry(source.UserRegistry, args, func(r *RegistryDataSource) int {
-		err := registry.DelNrm(r.Name)
+		err := source.Drop(r.Name)
 		if err != nil {
 			logger.Error(internal.StringJoin("[Grm]: del registry fail", err.Error()))
 			return 1
@@ -142,7 +142,7 @@ func AddRegistry(source *registry.RegistryDataSource, args []string) int {
 		logger.Error("[Grm]: please verify the uri address you entered.")
 		return 1
 	}
-	if err := addRegistryImpl(name, uri, home); err != nil {
+	if err := source.Insert(name, uri, home); err != nil {
 		logger.Error(internal.StringJoin("[Grm]: add registry fail", err.Error()))
 		return 1
 	}
@@ -247,11 +247,6 @@ func sendFetchResult(f func() (FetchState, string), ch chan ChannelStorage) {
 			log,
 		}
 	}()
-}
-
-func addRegistryImpl(name, uri, home string) error {
-	return registry.WriteNrm(name, uri, home)
-
 }
 
 func getDashLine(key string, length int) string {
