@@ -1,16 +1,11 @@
 package registry
 
 import (
+	"errors"
 	"os"
 
 	"github.com/modern-magic/grm/internal/fs"
 )
-
-var UserRegistry = make(map[string]RegsitryInfo, 0)
-
-func GetUserRegistryInfo() (map[string]RegsitryInfo, []string) {
-	return ReadNrm()
-}
 
 type registryYAML struct {
 	Home     string `yaml:"home"`
@@ -33,6 +28,8 @@ type Resolver interface {
 	GetNames() []string
 	GetRegistries() map[string]RegsitryInfo
 	Resolve()
+	Drop(name string) error
+	Insert(name string, uri string, home string) error
 }
 
 type resolver struct {
@@ -75,4 +72,39 @@ func (r *resolver) GetRegistries() map[string]RegsitryInfo {
 
 func (r *resolver) GetNames() []string {
 	return r.names
+}
+
+func (r *resolver) Drop(name string) error {
+	if _, ok := r.registry[name]; ok {
+		delete(r.registry, name)
+		return nil
+	}
+	return errors.New("Not found")
+}
+
+func (r *resolver) Insert(name string, uri string, home string) error {
+	if _, ok := r.registry[name]; ok {
+		return errors.New("Already exists")
+	}
+	r.registry[name] = RegsitryInfo{
+		Home: home,
+		Uri:  uri,
+	}
+	parsed := parsr(r.registry)
+	err, _ := r.fs.WriteYAML(Grmrc, parsed)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func parsr(original map[string]RegsitryInfo) map[string]registryYAML {
+	parserd := make(map[string]registryYAML, 0)
+	for k, v := range original {
+		parserd[k] = registryYAML{
+			Home:     v.Home,
+			Registry: v.Uri,
+		}
+	}
+	return parserd
 }
