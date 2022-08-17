@@ -31,14 +31,6 @@ func Run() int {
 	return runImpl(os.Args[1:])
 }
 
-func newRegistrySourceData() registry.RegistryDataSource {
-	return registry.RegistryDataSource{
-		Registry:   make(map[string]string),
-		Keys:       make([]string, 0),
-		PresetKeys: make([]string, 0),
-	}
-}
-
 func runImpl(args []string) int {
 
 	if len(args) == 0 {
@@ -62,7 +54,7 @@ func runImpl(args []string) int {
 	}
 
 	// initlize nrm & npm preset source.
-	sources := newRegistrySourceData()
+	sources := registry.NewRegistrySourceData(&fs.FsImpl{})
 	return parserSourceForRun(args, &sources)
 }
 
@@ -79,7 +71,13 @@ func parserSourceForRun(args []string, source *registry.RegistryDataSource) int 
 	source.Keys = append(source.Keys, user.GetNames()...)
 
 	for _, key := range user.GetNames() {
-		source.Registry[key] = user.GetRegistries()[key].Uri
+		home := user.GetRegistries()[key].Home
+		uri := user.GetRegistries()[key].Uri
+		source.Registry[key] = uri
+		source.Niave[key] = registry.RegsitryInfo{
+			Home: home,
+			Uri:  uri,
+		}
 	}
 
 	for _, arg := range args {

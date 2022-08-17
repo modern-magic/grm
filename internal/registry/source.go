@@ -1,8 +1,11 @@
 package registry
 
 import (
+	"errors"
 	"path"
 	"reflect"
+
+	"github.com/modern-magic/grm/internal/fs"
 )
 
 type RegsitryInfo struct {
@@ -86,8 +89,59 @@ var (
 )
 
 type RegistryDataSource struct {
-	*resolver
+	fs         fs.FS
 	Registry   map[string]string
 	Keys       []string
 	PresetKeys []string
+	Niave      map[string]RegsitryInfo
+}
+
+func (r *RegistryDataSource) Drop(name string) error {
+	if _, ok := r.Niave[name]; ok {
+		delete(r.Niave, name)
+		parsed := parsr(r.Niave)
+		err, _ := r.fs.WriteYAML(Grmrc, parsed)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	return errors.New("Not found")
+}
+
+func (r *RegistryDataSource) Insert(name string, uri string, home string) error {
+	if _, ok := r.Niave[name]; ok {
+		return errors.New("Already exists")
+	}
+	r.Niave[name] = RegsitryInfo{
+		Home: home,
+		Uri:  uri,
+	}
+	parsed := parsr(r.Niave)
+	err, _ := r.fs.WriteYAML(Grmrc, parsed)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func parsr(original map[string]RegsitryInfo) map[string]registryYAML {
+	parserd := make(map[string]registryYAML, 0)
+	for k, v := range original {
+		parserd[k] = registryYAML{
+			Home:     v.Home,
+			Registry: v.Uri,
+		}
+	}
+	return parserd
+}
+
+func NewRegistrySourceData(fs fs.FS) RegistryDataSource {
+	return RegistryDataSource{
+		fs:         fs,
+		Registry:   make(map[string]string),
+		Keys:       make([]string, 0),
+		PresetKeys: make([]string, 0),
+		Niave:      make(map[string]RegsitryInfo),
+	}
 }
