@@ -100,7 +100,6 @@ func (fs *FsImpl) WriteYAML(file string, content interface{}) (canonicalError er
 	if originalError != nil {
 		return originalError, originalError
 	}
-	originalError = os.WriteFile(file, out, 0644)
-	canonicalError = fs.canonicalizeError(originalError)
+	canonicalError, originalError = fs.OuputFile(file, out)
 	return canonicalError, originalError
 }
