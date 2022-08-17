@@ -3,22 +3,10 @@ package registry
 import (
 	"os"
 	"os/exec"
-	"runtime"
 	"strings"
 
 	"github.com/go-ini/ini"
 )
-
-func isWin() bool {
-	return runtime.GOOS == "windows"
-}
-
-func GetSystemPreffix() string {
-	if isWin() {
-		return os.Getenv("USERPROFILE")
-	}
-	return os.Getenv("HOME")
-}
 
 func readini(file string) (*ini.File, error) {
 	cfg, err := ini.LooseLoad(file)

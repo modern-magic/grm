@@ -87,6 +87,7 @@ var (
 	Delete   = "delete"
 	Default  = "DEFAULT"
 	Nrmrc    = path.Join(GetSystemPreffix(), ".nrmrc")
+	Grmrc    = path.Join(GetSystemPreffix(), ".grmrc.yaml")
 	Npmrc    = path.Join(GetSystemPreffix(), ".npmrc")
 )
 

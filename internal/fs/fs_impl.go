@@ -81,7 +81,12 @@ func (fs *FsImpl) ReadYAML(file string, out interface{}) (content interface{}, c
 		err := fmt.Errorf("%s%s%s\n", "Error with", file, "Please pass a yaml file.")
 		return nil, err, err
 	}
-
+	_, err := os.Stat(file)
+	if err != nil {
+		if !os.IsExist(err) {
+			return nil, err, err
+		}
+	}
 	fileContent, canonicalError, originalError := fs.ReadFile(file)
 	if canonicalError != nil || originalError != nil {
 		return nil, canonicalError, originalError

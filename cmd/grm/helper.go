@@ -6,6 +6,7 @@ import (
 
 	"github.com/modern-magic/grm/internal"
 	"github.com/modern-magic/grm/internal/action"
+	"github.com/modern-magic/grm/internal/fs"
 	"github.com/modern-magic/grm/internal/logger"
 	"github.com/modern-magic/grm/internal/registry"
 )
@@ -69,17 +70,17 @@ func parserSourceForRun(args []string, source *registry.RegistryDataSource) int 
 
 	source.Keys = append(source.Keys, registry.GetPresetRegistryNames()...)
 
-	nrmMaps, nrmKeys := registry.GetUserRegistryInfo()
-
-	source.Keys = append(source.Keys, nrmKeys...)
-
+	user := registry.NewUserResolver(&fs.FsImpl{})
+	user.Resolve()
 	for _, key := range registry.GetPresetRegistryNames() {
 		source.Registry[key] = registry.GetPresetRegistryInfo(key)
 	}
 
-	for _, key := range nrmKeys {
-		source.Registry[key] = nrmMaps[key].Uri
-		source.UserRegistry[key] = nrmMaps[key].Uri
+	source.Keys = append(source.Keys, user.GetNames()...)
+
+	for _, key := range user.GetNames() {
+		source.Registry[key] = user.GetRegistries()[key].Uri
+		source.UserRegistry[key] = user.GetRegistries()[key].Uri
 	}
 
 	for _, arg := range args {
