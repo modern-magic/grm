@@ -20,13 +20,13 @@ func getCurrent() string {
 func ShowSources(source *registry.RegistryDataSource) int {
 
 	outLen := len(source.Keys) + 3
-
 	cur := getCurrent()
-
+	cur = strings.Replace(cur, "", "", -1)
+	cur = strings.Replace(cur, "\n", "", -1)
 	for _, key := range source.Keys {
 		prefix := ""
 		uri := source.Registry[key]
-		if cur == uri {
+		if strings.Compare(uri, cur) == 0 {
 			prefix = "* "
 		}
 
