@@ -100,7 +100,7 @@ func loadRegistry(source map[string]string, args []string, callback func(r *Regi
 	}()
 	name := internal.PickArgs(args, 0)
 	uri, err := getRegistryMeta(name, source, func(n string) (string, error) {
-		return "", errors.New(internal.StringJoin("[Grm]: Can't found alias", name, "in your .nrmrc file. Please check it exist."))
+		return "", errors.New(internal.StringJoin("[Grm]: Can't found alias", name, "in your .grmrc.yaml file. Please check it exist."))
 	})
 	if err != nil {
 		logger.Error(internal.StringJoin(err.Error()))
