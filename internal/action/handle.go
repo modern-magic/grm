@@ -73,7 +73,14 @@ func SetCurrent(source *registry.RegistryDataSource, args []string) int {
 // del .nrm file registry alias
 
 func DelRegistry(source *registry.RegistryDataSource, args []string) int {
-	return loadRegistry(source.UserRegistry, args, func(r *RegistryDataSource) int {
+	return loadRegistry(source.Registry, args, func(r *RegistryDataSource) int {
+
+		for _, key := range source.PresetKeys {
+			if key == r.Name {
+				logger.Error(internal.StringJoin("[Grm]: can't delete preset registry", r.Name))
+				return 1
+			}
+		}
 		err := source.Drop(r.Name)
 		if err != nil {
 			logger.Error(internal.StringJoin("[Grm]: del registry fail", err.Error()))

@@ -81,19 +81,13 @@ func GetPresetRegistryInfo(kind string) string {
 }
 
 var (
-	Home     = "home"
-	Author   = "_author"
-	Registry = "registry"
-	Delete   = "delete"
-	Default  = "DEFAULT"
-	Grmrc    = path.Join(GetSystemPreffix(), ".grmrc.yaml")
-	Npmrc    = path.Join(GetSystemPreffix(), ".npmrc")
+	Grmrc = path.Join(GetSystemPreffix(), ".grmrc.yaml")
+	Npmrc = path.Join(GetSystemPreffix(), ".npmrc")
 )
 
 type RegistryDataSource struct {
 	*resolver
-	Registry     map[string]string
-	Keys         []string
-	PresetKeys   []string
-	UserRegistry map[string]string
+	Registry   map[string]string
+	Keys       []string
+	PresetKeys []string
 }

@@ -33,9 +33,9 @@ func Run() int {
 
 func newRegistrySourceData() registry.RegistryDataSource {
 	return registry.RegistryDataSource{
-		Registry:     make(map[string]string),
-		Keys:         make([]string, 0),
-		UserRegistry: make(map[string]string),
+		Registry:   make(map[string]string),
+		Keys:       make([]string, 0),
+		PresetKeys: make([]string, 0),
 	}
 }
 
@@ -69,7 +69,7 @@ func runImpl(args []string) int {
 func parserSourceForRun(args []string, source *registry.RegistryDataSource) int {
 
 	source.Keys = append(source.Keys, registry.GetPresetRegistryNames()...)
-
+	source.PresetKeys = append(source.PresetKeys, source.Keys...)
 	user := registry.NewUserResolver(&fs.FsImpl{})
 	user.Resolve()
 	for _, key := range registry.GetPresetRegistryNames() {
@@ -80,7 +80,6 @@ func parserSourceForRun(args []string, source *registry.RegistryDataSource) int 
 
 	for _, key := range user.GetNames() {
 		source.Registry[key] = user.GetRegistries()[key].Uri
-		source.UserRegistry[key] = user.GetRegistries()[key].Uri
 	}
 
 	for _, arg := range args {
