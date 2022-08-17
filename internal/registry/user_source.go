@@ -60,8 +60,7 @@ func (r *resolver) Resolve() {
 			}
 			r.names = append(r.names, k)
 		}
-	default:
-		panic("Invalid type")
+		//  we shouldn't panic here. Becuase user may delete .grmrc.yaml.
 	}
 }
 
