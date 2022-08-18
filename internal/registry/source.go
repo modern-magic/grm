@@ -77,7 +77,7 @@ func GetPresetRegistryNames() []string {
 func GetPresetRegistryInfo(kind string) string {
 	info, ok := PresetRegistry[kind]
 	if !ok {
-		panic("Invalid Source")
+		panic(SourceStatus.Invalid)
 	}
 	return info.Uri
 
@@ -87,6 +87,18 @@ var (
 	Grmrc = path.Join(GetSystemPreffix(), ".grmrc.yaml")
 	Npmrc = path.Join(GetSystemPreffix(), ".npmrc")
 )
+
+type RegistryStatus struct {
+	NotFound string
+	Invalid  string
+	Exists   string
+}
+
+var SourceStatus = RegistryStatus{
+	NotFound: "Not found",
+	Invalid:  "Invalid Source",
+	Exists:   "Already exists",
+}
 
 type RegistryDataSource struct {
 	fs         fs.FS
@@ -106,12 +118,12 @@ func (r *RegistryDataSource) Drop(name string) error {
 		}
 		return nil
 	}
-	return errors.New("Not found")
+	return errors.New(SourceStatus.NotFound)
 }
 
 func (r *RegistryDataSource) Insert(name string, uri string, home string) error {
 	if _, ok := r.Niave[name]; ok {
-		return errors.New("Already exists")
+		return errors.New(SourceStatus.Exists)
 	}
 	r.Niave[name] = RegsitryInfo{
 		Home: home,

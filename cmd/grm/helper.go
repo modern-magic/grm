@@ -54,15 +54,16 @@ func runImpl(args []string) int {
 	}
 
 	// initlize nrm & npm preset source.
-	sources := registry.NewRegistrySourceData(&fs.FsImpl{})
-	return parserSourceForRun(args, &sources)
+	fs := fs.NewFS()
+	sources := registry.NewRegistrySourceData(fs)
+	return parserSourceForRun(args, &sources, fs)
 }
 
-func parserSourceForRun(args []string, source *registry.RegistryDataSource) int {
+func parserSourceForRun(args []string, source *registry.RegistryDataSource, fs fs.FS) int {
 
 	source.Keys = append(source.Keys, registry.GetPresetRegistryNames()...)
 	source.PresetKeys = append(source.PresetKeys, source.Keys...)
-	user := registry.NewUserResolver(&fs.FsImpl{})
+	user := registry.NewUserResolver(fs)
 	user.Resolve()
 	for _, key := range registry.GetPresetRegistryNames() {
 		source.Registry[key] = registry.GetPresetRegistryInfo(key)

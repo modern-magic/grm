@@ -19,7 +19,7 @@ func ReadNpm() string {
 	cmd.Stderr = os.Stderr
 	out, err := cmd.Output()
 	if err != nil {
-		return ""
+		return err.Error()
 	}
 	return string(out)
 }

@@ -10,14 +10,18 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type FsImpl struct {
+type fsImpl struct {
 }
 
 func IsWindows() bool {
 	return runtime.GOOS == "windows"
 }
 
-func (fs *FsImpl) canonicalizeError(err error) error {
+func NewFS() FS {
+	return &fsImpl{}
+}
+
+func (fs *fsImpl) canonicalizeError(err error) error {
 	if pathError, ok := err.(*os.PathError); ok {
 		err = pathError.Unwrap()
 	}
@@ -36,7 +40,7 @@ type MakeDirectoryOptions struct {
 	mode      os.FileMode
 }
 
-func (fs *FsImpl) MkDir(file string, option MakeDirectoryOptions) (canonicalError error, originalError error) {
+func (fs *fsImpl) MkDir(file string, option MakeDirectoryOptions) (canonicalError error, originalError error) {
 
 	if option.mode == 0 {
 		option.mode = os.ModePerm.Perm()
@@ -51,14 +55,14 @@ func (fs *FsImpl) MkDir(file string, option MakeDirectoryOptions) (canonicalErro
 	return canonicalError, originalError
 }
 
-func (fs *FsImpl) ReadFile(file string) (filecontent string, canonicalError error, originalError error) {
+func (fs *fsImpl) ReadFile(file string) (filecontent string, canonicalError error, originalError error) {
 	buffer, originalError := os.ReadFile(file)
 	canonicalError = fs.canonicalizeError(originalError)
 	fileContent := string(buffer)
 	return fileContent, canonicalError, originalError
 }
 
-func (fs *FsImpl) OuputFile(file string, content []byte) (canonicalError error, originalError error) {
+func (fs *fsImpl) OuputFile(file string, content []byte) (canonicalError error, originalError error) {
 
 	dirName := path.Dir(file)
 	_, err := os.Stat(dirName)
@@ -75,7 +79,7 @@ func (fs *FsImpl) OuputFile(file string, content []byte) (canonicalError error, 
 	return canonicalError, originalError
 }
 
-func (fs *FsImpl) ReadYAML(file string, out interface{}) (content interface{}, canonicalError error, originalError error) {
+func (fs *fsImpl) ReadYAML(file string, out interface{}) (content interface{}, canonicalError error, originalError error) {
 	ext := path.Ext(file)
 	if ext != ".yaml" && ext != ".yml" {
 		err := fmt.Errorf("%s%s%s\n", "Error with", file, "Please pass a yaml file.")
@@ -95,7 +99,7 @@ func (fs *FsImpl) ReadYAML(file string, out interface{}) (content interface{}, c
 	return out, originalError, originalError
 }
 
-func (fs *FsImpl) WriteYAML(file string, content interface{}) (canonicalError error, originalError error) {
+func (fs *fsImpl) WriteYAML(file string, content interface{}) (canonicalError error, originalError error) {
 	out, originalError := yaml.Marshal(content)
 	if originalError != nil {
 		return originalError, originalError
