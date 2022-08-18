@@ -9,17 +9,16 @@ func WriteNpm(uri string) error {
 	args := []string{"config", "set", "registry", uri}
 	cmd := exec.Command("npm", args...)
 	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	return err
+	return cmd.Run()
 }
 
-func ReadNpm() string {
+func ReadNpm() (string, error) {
 	args := []string{"config", "get", "registry"}
 	cmd := exec.Command("npm", args...)
 	cmd.Stderr = os.Stderr
 	out, err := cmd.Output()
 	if err != nil {
-		return err.Error()
+		return "", err
 	}
-	return string(out)
+	return string(out), nil
 }

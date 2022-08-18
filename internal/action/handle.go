@@ -14,15 +14,19 @@ import (
 )
 
 func getCurrent() string {
-	return registry.ReadNpm()
+	cur, err := registry.ReadNpm()
+	if (err) != nil {
+		return ""
+	}
+	cur = strings.Replace(cur, "", "", -1)
+	cur = strings.Replace(cur, "\n", "", -1)
+	return cur
 }
 
 func ShowSources(source *registry.RegistryDataSource) int {
 
 	outLen := len(source.Keys) + 3
 	cur := getCurrent()
-	cur = strings.Replace(cur, "", "", -1)
-	cur = strings.Replace(cur, "\n", "", -1)
 	for _, key := range source.Keys {
 		prefix := ""
 		uri := source.Registry[key]
