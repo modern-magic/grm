@@ -6,6 +6,7 @@ import (
 
 	"github.com/modern-magic/grm/internal"
 	"github.com/modern-magic/grm/internal/action"
+	"github.com/modern-magic/grm/internal/fs"
 	"github.com/modern-magic/grm/internal/logger"
 	"github.com/modern-magic/grm/internal/registry"
 )
@@ -28,14 +29,6 @@ Commands:
 
 func Run() int {
 	return runImpl(os.Args[1:])
-}
-
-func newRegistrySourceData() registry.RegistryDataSource {
-	return registry.RegistryDataSource{
-		Registry:     make(map[string]string),
-		Keys:         make([]string, 0),
-		UserRegistry: make(map[string]string),
-	}
 }
 
 func runImpl(args []string) int {
@@ -61,25 +54,31 @@ func runImpl(args []string) int {
 	}
 
 	// initlize nrm & npm preset source.
-	sources := newRegistrySourceData()
-	return parserSourceForRun(args, &sources)
+	fs := fs.NewFS()
+	sources := registry.NewRegistrySourceData(fs)
+	return parserSourceForRun(args, &sources, fs)
 }
 
-func parserSourceForRun(args []string, source *registry.RegistryDataSource) int {
+func parserSourceForRun(args []string, source *registry.RegistryDataSource, fs fs.FS) int {
 
 	source.Keys = append(source.Keys, registry.GetPresetRegistryNames()...)
-
-	nrmMaps, nrmKeys := registry.GetUserRegistryInfo()
-
-	source.Keys = append(source.Keys, nrmKeys...)
-
+	source.PresetKeys = append(source.PresetKeys, source.Keys...)
+	user := registry.NewUserResolver(fs)
+	user.Resolve()
 	for _, key := range registry.GetPresetRegistryNames() {
 		source.Registry[key] = registry.GetPresetRegistryInfo(key)
 	}
 
-	for _, key := range nrmKeys {
-		source.Registry[key] = nrmMaps[key].Uri
-		source.UserRegistry[key] = nrmMaps[key].Uri
+	source.Keys = append(source.Keys, user.GetNames()...)
+
+	for _, key := range user.GetNames() {
+		home := user.GetRegistries()[key].Home
+		uri := user.GetRegistries()[key].Uri
+		source.Registry[key] = uri
+		source.Niave[key] = registry.RegsitryInfo{
+			Home: home,
+			Uri:  uri,
+		}
 	}
 
 	for _, arg := range args {

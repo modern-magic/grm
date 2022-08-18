@@ -14,19 +14,23 @@ import (
 )
 
 func getCurrent() string {
-	return registry.ReadNpm()
+	cur, err := registry.ReadNpm()
+	if err != nil {
+		return ""
+	}
+	cur = strings.Replace(cur, "", "", -1)
+	cur = strings.Replace(cur, "\n", "", -1)
+	return cur
 }
 
 func ShowSources(source *registry.RegistryDataSource) int {
 
 	outLen := len(source.Keys) + 3
-
 	cur := getCurrent()
-
 	for _, key := range source.Keys {
 		prefix := ""
 		uri := source.Registry[key]
-		if cur == uri {
+		if strings.Compare(uri, cur) == 0 {
 			prefix = "* "
 		}
 
@@ -73,8 +77,15 @@ func SetCurrent(source *registry.RegistryDataSource, args []string) int {
 // del .nrm file registry alias
 
 func DelRegistry(source *registry.RegistryDataSource, args []string) int {
-	return loadRegistry(source.UserRegistry, args, func(r *RegistryDataSource) int {
-		err := registry.DelNrm(r.Name)
+	return loadRegistry(source.Registry, args, func(r *RegistryDataSource) int {
+
+		for _, key := range source.PresetKeys {
+			if key == r.Name {
+				logger.Error(internal.StringJoin("[Grm]: can't delete preset registry", r.Name))
+				return 1
+			}
+		}
+		err := source.Drop(r.Name)
 		if err != nil {
 			logger.Error(internal.StringJoin("[Grm]: del registry fail", err.Error()))
 			return 1
@@ -93,7 +104,7 @@ func loadRegistry(source map[string]string, args []string, callback func(r *Regi
 	}()
 	name := internal.PickArgs(args, 0)
 	uri, err := getRegistryMeta(name, source, func(n string) (string, error) {
-		return "", errors.New(internal.StringJoin("[Grm]: Can't found alias", name, "in your .nrmrc file. Please check it exist."))
+		return "", errors.New(internal.StringJoin("[Grm]: Can't found alias", name, "in your .grmrc.yaml file. Please check it exist."))
 	})
 	if err != nil {
 		logger.Error(internal.StringJoin(err.Error()))
@@ -142,7 +153,7 @@ func AddRegistry(source *registry.RegistryDataSource, args []string) int {
 		logger.Error("[Grm]: please verify the uri address you entered.")
 		return 1
 	}
-	if err := addRegistryImpl(name, uri, home); err != nil {
+	if err := source.Insert(name, uri, home); err != nil {
 		logger.Error(internal.StringJoin("[Grm]: add registry fail", err.Error()))
 		return 1
 	}
@@ -247,11 +258,6 @@ func sendFetchResult(f func() (FetchState, string), ch chan ChannelStorage) {
 			log,
 		}
 	}()
-}
-
-func addRegistryImpl(name, uri, home string) error {
-	return registry.WriteNrm(name, uri, home)
-
 }
 
 func getDashLine(key string, length int) string {
