@@ -1,8 +1,6 @@
 package registry
 
 import (
-	"os"
-
 	"github.com/modern-magic/grm/internal/fs"
 )
 
@@ -12,13 +10,6 @@ type registryYAML struct {
 }
 
 type RegistryYAML = registryYAML
-
-func GetSystemPreffix() string {
-	if fs.IsWindows() {
-		return os.Getenv("USERPROFILE")
-	}
-	return os.Getenv("HOME")
-}
 
 type ResolverResult struct {
 	Registries map[string]RegsitryInfo
@@ -60,7 +51,7 @@ func (r *resolver) Resolve() {
 			}
 			r.names = append(r.names, k)
 		}
-		//  we shouldn't panic here. Becuase user may delete .grmrc.yaml.
+		//  we shouldn't panic here. Because user may delete .grmrc.yaml.
 	}
 }
 

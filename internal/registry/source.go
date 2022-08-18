@@ -84,8 +84,8 @@ func GetPresetRegistryInfo(kind string) string {
 }
 
 var (
-	Grmrc = path.Join(GetSystemPreffix(), ".grmrc.yaml")
-	Npmrc = path.Join(GetSystemPreffix(), ".npmrc")
+	Grmrc = path.Join(fs.SystemPreffix, ".grmrc.yaml")
+	Npmrc = path.Join(fs.SystemPreffix, ".npmrc")
 )
 
 type RegistryStatus struct {

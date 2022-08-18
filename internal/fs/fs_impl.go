@@ -4,16 +4,11 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"runtime"
 
 	"gopkg.in/yaml.v3"
 )
 
 type fsImpl struct {
-}
-
-func IsWindows() bool {
-	return runtime.GOOS == "windows"
 }
 
 func NewFS() FS {
@@ -40,8 +35,7 @@ func (fs *fsImpl) MkDir(file string, option MakeDirectoryOptions) error {
 
 func (fs *fsImpl) ReadFile(file string) (string, error) {
 	buffer, err := os.ReadFile(file)
-	fileContent := string(buffer)
-	return fileContent, err
+	return string(buffer), err
 }
 
 func (fs *fsImpl) OuputFile(file string, content []byte) error {
@@ -85,6 +79,5 @@ func (fs *fsImpl) WriteYAML(file string, content interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = fs.OuputFile(file, out)
-	return err
+	return fs.OuputFile(file, out)
 }
