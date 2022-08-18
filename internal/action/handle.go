@@ -15,7 +15,7 @@ import (
 
 func getCurrent() string {
 	cur, err := registry.ReadNpm()
-	if (err) != nil {
+	if err != nil {
 		return ""
 	}
 	cur = strings.Replace(cur, "", "", -1)
