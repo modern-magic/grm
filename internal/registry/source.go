@@ -112,7 +112,7 @@ func (r *RegistryDataSource) Drop(name string) error {
 	if _, ok := r.Niave[name]; ok {
 		delete(r.Niave, name)
 		parsed := parsr(r.Niave)
-		err, _ := r.fs.WriteYAML(Grmrc, parsed)
+		err := r.fs.WriteYAML(Grmrc, parsed)
 		if err != nil {
 			return err
 		}
@@ -130,7 +130,7 @@ func (r *RegistryDataSource) Insert(name string, uri string, home string) error 
 		Uri:  uri,
 	}
 	parsed := parsr(r.Niave)
-	err, _ := r.fs.WriteYAML(Grmrc, parsed)
+	err := r.fs.WriteYAML(Grmrc, parsed)
 	if err != nil {
 		return err
 	}

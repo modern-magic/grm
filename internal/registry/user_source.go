@@ -46,7 +46,7 @@ func NewUserResolver(fs fs.FS) Resolver {
 }
 
 func (r *resolver) Resolve() {
-	content, err, _ := r.fs.ReadYAML(Grmrc, map[string]registryYAML{})
+	content, err := r.fs.ReadYAML(Grmrc, map[string]registryYAML{})
 	if err != nil {
 		// user may delte .grmrc.yaml.So we should set it as a empty map
 		r.registry = make(map[string]RegsitryInfo, 0)
