@@ -69,7 +69,7 @@ func (fs *fsImpl) ReadYAML(file string, out interface{}) (interface{}, error) {
 	_, err := os.Stat(file)
 	if err != nil {
 		if !os.IsExist(err) {
-			return err, err
+			return nil, err
 		}
 	}
 	fileContent, err := fs.ReadFile(file)
