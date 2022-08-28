@@ -30,7 +30,7 @@ $ go install github.com/modern-magic/grm/cmd/grm@latest
 
 ```
 
-Or you can download a [binary package or msi package](https://github.com/modern-magic/grm/releases/latest).
+Or you can download a [binary from the releases page](https://github.com/modern-magic/grm/releases/latest).
 
 ## Usage
 
@@ -56,27 +56,27 @@ Commands:
 
 > What is grm?
 
-A minimalist npm source manager.
+grm is a minimalist npm registry manager.
 
-> Why new nrm?
+> Why the need for a new nrm?
 
-Installing `nrm` is too slow, and `grm` can be fast.
+Installing `nrm` can be slow, and `grm` is much faster.
 
-> Why not so comprehensive
+> Why is it not so comprehensive
 
-Because we are only source manager.
+Because grm is only a source manager.
 
 > Why choose grm?
 
-Compress to `nrm` and `nnrm` . `grm` has more advantages in installing. Benefit from golang cross platform.
+In comparason to [`nrm`](https://github.com/Pana/nrm) and [`nnrm`](https://github.com/YunYouJun/nnrm) `grm` is faster and does not require node.
 
 > Why do I get a virus report when I use the msi installation package?
 
-We use upx to pack grm. So in some antivirus software will report it have a virus. But you can use it with confidence. grm is a poison free program :)
+We use upx to package grm. So some antivirus software will report it as a virus. But you can use it with confidence. grm is a poison free program :) (check the source if you don't trust us)
 
-> Why does it not work when I use brew installation on linux?
+> Why does it not work when I use the brew installation on linux?
 
-In some distributions, `git` uses many aliases, including `grm`, so we need to `unalias grm` and then it will work.
+In some distributions, `git` uses many aliases, including `grm`, so we need to run `unalias grm` in the `.bashrc`/`.zshrc` and then it will work.
 
 ## All Contributors
 
@@ -90,10 +90,10 @@ Thanks to the following friends for their contributions to Grm:
 
 Thanks to [JetBrains](https://www.jetbrains.com/) for allocating free open-source licences for IDEs.
 
-<p align="right">
+<p align="left">
 <img width="250px" height="250px"  src="https://resources.jetbrains.com/storage/products/company/brand/logos/GoLand_icon.png" alt="GoLand logo.">
 </p>
 
 ## LICENSE
 
-[MIT](./LICENSE)
+[MIT](LICENSE)
