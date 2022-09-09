@@ -13,21 +13,24 @@ import (
 )
 
 type actionImpl struct {
-	fs     fs.FS
-	source map[string]registry.RegsitryInfo
-	args   []string
+	fs         fs.FS
+	source     map[string]registry.RegsitryInfo
+	userSource map[string]registry.RegsitryInfo
+	args       []string
 }
 
 type ActionOptions struct {
-	Source map[string]registry.RegsitryInfo
-	Args   []string
+	Source     map[string]registry.RegsitryInfo
+	UserSource map[string]registry.RegsitryInfo
+	Args       []string
 }
 
 func NewAction(options ActionOptions) Action {
 	return &actionImpl{
-		fs:     fs.NewFS(),
-		source: options.Source,
-		args:   options.Args,
+		fs:         fs.NewFS(),
+		source:     options.Source,
+		userSource: options.UserSource,
+		args:       options.Args,
 	}
 }
 
@@ -114,7 +117,7 @@ func (action *actionImpl) Drop() int {
 			logger.Error(internal.StringJoin("[Grm]: can't delete preset registry", r.Name))
 			return 1
 		}
-		delete(action.source, r.Name)
+		delete(action.userSource, r.Name)
 		raw := registry.Parsr(action.source)
 		err := action.fs.WriteYAML(registry.Grmrc, raw)
 		if err != nil {
@@ -161,12 +164,12 @@ func (action *actionImpl) Join() int {
 		return 1
 	}
 
-	action.source[k] = registry.RegsitryInfo{
+	action.userSource[k] = registry.RegsitryInfo{
 		Home: home,
 		Uri:  uri,
 	}
 
-	raw := registry.Parsr(action.source)
+	raw := registry.Parsr(action.userSource)
 	err := action.fs.WriteYAML(registry.Grmrc, raw)
 	if err != nil {
 		logger.Error(internal.StringJoin("[Grm]: Add registry fail", err.Error()))

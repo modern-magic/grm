@@ -75,18 +75,6 @@ var (
 	Npmrc = path.Join(fs.SystemPreffix, ".npmrc")
 )
 
-type RegistryStatus struct {
-	NotFound string
-	Invalid  string
-	Exists   string
-}
-
-var SourceStatus = RegistryStatus{
-	NotFound: "Not found",
-	Invalid:  "Invalid Source",
-	Exists:   "Already exists",
-}
-
 type YAMLStruct struct {
 	Home     string `yaml:"home"`
 	Registry string `yaml:"registry"`
@@ -105,17 +93,20 @@ func Parsr(original map[string]RegsitryInfo) map[string]YAMLStruct {
 
 type Source interface {
 	GetSource() map[string]RegsitryInfo
+	GetUserSource() map[string]RegsitryInfo
 }
 
 type sourceImpl struct {
-	fs     fs.FS
-	source map[string]RegsitryInfo
+	fs         fs.FS
+	source     map[string]RegsitryInfo
+	userSource map[string]RegsitryInfo
 }
 
 func NewSource() Source {
 	source := &sourceImpl{
-		fs:     fs.NewFS(),
-		source: PresetRegistry,
+		fs:         fs.NewFS(),
+		source:     PresetRegistry,
+		userSource: make(map[string]RegsitryInfo),
 	}
 	source.loadGRMConfig()
 	return source
@@ -136,10 +127,18 @@ func (s *sourceImpl) loadGRMConfig() {
 				Home: v.Home,
 				Uri:  v.Registry,
 			}
+			s.userSource[k] = RegsitryInfo{
+				Home: v.Home,
+				Uri:  v.Registry,
+			}
 		}
 	}
 }
 
 func (s *sourceImpl) GetSource() map[string]RegsitryInfo {
 	return s.source
+}
+
+func (s *sourceImpl) GetUserSource() map[string]RegsitryInfo {
+	return s.userSource
 }

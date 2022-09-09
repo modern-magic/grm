@@ -59,8 +59,9 @@ func runImpl(args []string) int {
 func parserSourceForRun(args []string, source registry.Source) int {
 
 	act := action.NewAction(action.ActionOptions{
-		Source: source.GetSource(),
-		Args:   args,
+		Source:     source.GetSource(),
+		UserSource: source.GetUserSource(),
+		Args:       args,
 	})
 
 	for _, arg := range args {
