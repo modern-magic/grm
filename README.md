@@ -68,7 +68,7 @@ Because grm is only a source manager.
 
 > Why choose grm?
 
-In comparason to [`nrm`](https://github.com/Pana/nrm) and [`nnrm`](https://github.com/YunYouJun/nnrm) `grm` is faster and does not require node.
+In comparison to [`nrm`](https://github.com/Pana/nrm) and [`nnrm`](https://github.com/YunYouJun/nnrm) `grm` is faster and does not require node.
 
 > Why do I get a virus report when I use the msi installation package?
 

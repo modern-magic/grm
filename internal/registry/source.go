@@ -1,16 +1,15 @@
 package registry
 
 import (
-	"errors"
 	"path"
-	"reflect"
 
 	"github.com/modern-magic/grm/internal/fs"
 )
 
 type RegsitryInfo struct {
-	Home string
-	Uri  string
+	Home     string
+	Uri      string
+	Internal bool
 }
 
 type SourceName struct {
@@ -35,52 +34,40 @@ var PresetSourceName = SourceName{
 
 var PresetRegistry = map[string]RegsitryInfo{
 	PresetSourceName.Npm: {
-		Home: "https://www.npmjs.org",
-		Uri:  "https://registry.npmjs.org/",
+		Home:     "https://www.npmjs.org",
+		Uri:      "https://registry.npmjs.org/",
+		Internal: true,
 	},
 	PresetSourceName.Yarn: {
-		Home: "https://yarnpkg.com",
-		Uri:  "https://registry.yarnpkg.com/",
+		Home:     "https://yarnpkg.com",
+		Uri:      "https://registry.yarnpkg.com/",
+		Internal: true,
 	},
 	PresetSourceName.HuaWei: {
-		Home: "https://repo.huaweicloud.com/repository/npm/",
-		Uri:  "https://repo.huaweicloud.com/repository/npm/",
+		Home:     "https://repo.huaweicloud.com/repository/npm/",
+		Uri:      "https://repo.huaweicloud.com/repository/npm/",
+		Internal: true,
 	},
 	PresetSourceName.Tencent: {
-		Home: "https://mirrors.cloud.tencent.com/npm/",
-		Uri:  "https://mirrors.cloud.tencent.com/npm/",
+		Home:     "https://mirrors.cloud.tencent.com/npm/",
+		Uri:      "https://mirrors.cloud.tencent.com/npm/",
+		Internal: true,
 	},
 	PresetSourceName.Cnpm: {
-		Home: "https://cnpmjs.org",
-		Uri:  "https://r.cnpmjs.org/",
+		Home:     "https://cnpmjs.org",
+		Uri:      "https://r.cnpmjs.org/",
+		Internal: true,
 	},
 	PresetSourceName.TaoBao: {
-		Home: "https://npmmirror.com",
-		Uri:  "https://registry.npmmirror.com/",
+		Home:     "https://npmmirror.com",
+		Uri:      "https://registry.npmmirror.com/",
+		Internal: true,
 	},
 	PresetSourceName.NpmMirror: {
-		Home: "https://skimdb.npmjs.com/",
-		Uri:  "https://skimdb.npmjs.com/Registry/",
+		Home:     "https://skimdb.npmjs.com/",
+		Uri:      "https://skimdb.npmjs.com/Registry/",
+		Internal: true,
 	},
-}
-
-func GetPresetRegistryNames() []string {
-	var dict interface{} = PresetSourceName
-	names := reflect.ValueOf(dict)
-	sequenNames := make([]string, names.NumField())
-	for i := 0; i < names.NumField(); i++ {
-		sequenNames[i] = names.Field(i).String()
-	}
-	return sequenNames
-}
-
-func GetPresetRegistryInfo(kind string) string {
-	info, ok := PresetRegistry[kind]
-	if !ok {
-		panic(SourceStatus.Invalid)
-	}
-	return info.Uri
-
 }
 
 var (
@@ -100,47 +87,15 @@ var SourceStatus = RegistryStatus{
 	Exists:   "Already exists",
 }
 
-type RegistryDataSource struct {
-	fs         fs.FS
-	Registry   map[string]string
-	Keys       []string
-	PresetKeys []string
-	Niave      map[string]RegsitryInfo
+type YAMLStruct struct {
+	Home     string `yaml:"home"`
+	Registry string `yaml:"registry"`
 }
 
-func (r *RegistryDataSource) Drop(name string) error {
-	if _, ok := r.Niave[name]; ok {
-		delete(r.Niave, name)
-		parsed := parsr(r.Niave)
-		err := r.fs.WriteYAML(Grmrc, parsed)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
-	return errors.New(SourceStatus.NotFound)
-}
-
-func (r *RegistryDataSource) Insert(name string, uri string, home string) error {
-	if _, ok := r.Niave[name]; ok {
-		return errors.New(SourceStatus.Exists)
-	}
-	r.Niave[name] = RegsitryInfo{
-		Home: home,
-		Uri:  uri,
-	}
-	parsed := parsr(r.Niave)
-	err := r.fs.WriteYAML(Grmrc, parsed)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func parsr(original map[string]RegsitryInfo) map[string]registryYAML {
-	parserd := make(map[string]registryYAML, 0)
+func Parsr(original map[string]RegsitryInfo) map[string]YAMLStruct {
+	parserd := make(map[string]YAMLStruct, 0)
 	for k, v := range original {
-		parserd[k] = registryYAML{
+		parserd[k] = YAMLStruct{
 			Home:     v.Home,
 			Registry: v.Uri,
 		}
@@ -148,12 +103,43 @@ func parsr(original map[string]RegsitryInfo) map[string]registryYAML {
 	return parserd
 }
 
-func NewRegistrySourceData(fs fs.FS) RegistryDataSource {
-	return RegistryDataSource{
-		fs:         fs,
-		Registry:   make(map[string]string),
-		Keys:       make([]string, 0),
-		PresetKeys: make([]string, 0),
-		Niave:      make(map[string]RegsitryInfo),
+type Source interface {
+	GetSource() map[string]RegsitryInfo
+}
+
+type sourceImpl struct {
+	fs     fs.FS
+	source map[string]RegsitryInfo
+}
+
+func NewSource() Source {
+	source := &sourceImpl{
+		fs:     fs.NewFS(),
+		source: PresetRegistry,
 	}
+	source.loadGRMConfig()
+	return source
+}
+
+func (s *sourceImpl) loadGRMConfig() {
+
+	content, err := s.fs.ReadYAML(Grmrc, map[string]YAMLStruct{})
+
+	if err != nil {
+		return
+	}
+
+	switch c := content.(type) {
+	case map[string]YAMLStruct:
+		for k, v := range c {
+			s.source[k] = RegsitryInfo{
+				Home: v.Home,
+				Uri:  v.Registry,
+			}
+		}
+	}
+}
+
+func (s *sourceImpl) GetSource() map[string]RegsitryInfo {
+	return s.source
 }
