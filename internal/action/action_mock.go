@@ -6,33 +6,37 @@ import (
 )
 
 type mockAction struct {
-	source map[string] registry.RegsitryInfo
+	source map[string]registry.RegsitryInfo
 	fs     fs.FS
+	args   []string
 }
 
-
-
-func MockAction(source map[string] registry.RegsitryInfo, ) Action {
+func MockAction(source map[string]registry.RegsitryInfo, args []string) Action {
 	return &mockAction{
 		source: source,
-        fs: fs.NewFS(),
+		fs:     fs.NewFS(),
+		args:   args,
 	}
 }
 
-
-func (action *mockAction) View(option  ViewOptions) int {
-    if(option.All){
-        return 2
-    }
+func (action *mockAction) View(option ViewOptions) int {
+	if option.All {
+		return 2
+	}
 	return 1
 }
 func (action *mockAction) Drop() int {
-
+	if _, ok := action.source[action.args[0]]; ok {
+		return 0
+	}
 	return 1
 }
 
 func (action *mockAction) Join() int {
-	return 1
+	if _, ok := action.source[action.args[0]]; ok {
+		return 1
+	}
+	return 0
 }
 
 func (action *mockAction) Test() int {
@@ -40,5 +44,8 @@ func (action *mockAction) Test() int {
 }
 
 func (action *mockAction) Use() int {
+	if _, ok := action.source[action.args[0]]; ok {
+		return 0
+	}
 	return 1
 }

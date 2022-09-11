@@ -234,6 +234,11 @@ func (action *actionImpl) Test() int {
 	// get the keywords that need test speed.
 	keys := verifyArgs(action.args)
 
+	// the keys may be empty.
+	if len(keys) == 0 {
+		return 1
+	}
+
 	for _, key := range keys {
 		meta := action.source[key]
 		testURLSpeed(key, meta.Uri)
