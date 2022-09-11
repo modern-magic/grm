@@ -17,7 +17,6 @@ func IsUri(uri string) bool {
 }
 
 func PickArgs(args []string, ptr int) string {
-    
 	if len(args) > ptr {
 		return args[ptr]
 	}
