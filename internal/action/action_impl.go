@@ -5,12 +5,19 @@ import (
 	"math"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/modern-magic/grm/internal"
 	"github.com/modern-magic/grm/internal/fs"
 	"github.com/modern-magic/grm/internal/logger"
 	"github.com/modern-magic/grm/internal/registry"
 )
+
+type RegistryDataSource struct {
+	Name     string
+	Uri      string
+	Internal bool
+}
 
 type actionImpl struct {
 	fs         fs.FS
@@ -138,7 +145,7 @@ func (action *actionImpl) Join() int {
 			return
 		}
 	}()
-	if len(action.args) < 1 {
+	if len(action.args) <= 1 {
 		logger.Warn(internal.StringJoin("[Grm]: Please pass an alias."))
 		return 1
 	}
@@ -180,7 +187,60 @@ func (action *actionImpl) Join() int {
 }
 
 func (action *actionImpl) Test() int {
-	return 1
+
+	var wg sync.WaitGroup
+
+	verifyArgs := func(args []string) []string {
+		if len(args) > 1 {
+			keys := make([]string, 0, len(args))
+			for _, arg := range args {
+				if _, ok := action.source[arg]; !ok {
+					continue
+				}
+				keys = append(keys, arg)
+			}
+			return internal.Uniq(keys)
+		}
+
+		keys := make([]string, 0, len(action.source))
+		for k := range action.source {
+			keys = append(keys, k)
+		}
+		return keys
+	}
+
+	testURLSpeed := func(name, url string) {
+		wg.Add(1)
+		go func() {
+			res := internal.Fetch(url)
+			if res.IsTimeout {
+				logger.PrintTextWithColor(os.Stderr, func(c logger.Colors) string {
+					return fmt.Sprintf("%s%s%s\n", c.Dim, internal.StringJoin("[Grm]: fetch", name, res.Status), c.Reset)
+				})
+			} else {
+				log := internal.StringJoin("[Grm]: fetch", name, res.Status, fmt.Sprintf("%.2f%s", res.Time, "s"))
+				switch res.StatusCode {
+				case 200, 304:
+					logger.Success(log)
+				default:
+					logger.Error(log)
+				}
+			}
+
+			wg.Done()
+		}()
+	}
+
+	// get the keywords that need test speed.
+	keys := verifyArgs(action.args)
+
+	for _, key := range keys {
+		meta := action.source[key]
+		testURLSpeed(key, meta.Uri)
+	}
+
+	wg.Wait()
+	return 0
 }
 
 func (action *actionImpl) Use() int {
