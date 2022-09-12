@@ -13,6 +13,8 @@ import (
 	"github.com/modern-magic/grm/internal/registry"
 )
 
+var MaxTestSpeedLimit = 5
+
 type RegistryDataSource struct {
 	Name     string
 	Uri      string
@@ -190,6 +192,8 @@ func (action *actionImpl) Test() int {
 
 	var wg sync.WaitGroup
 
+	var taskCh = make(chan bool, MaxTestSpeedLimit)
+
 	verifyArgs := func(args []string) []string {
 		if len(args) > 1 {
 			keys := make([]string, 0, len(args))
@@ -211,6 +215,7 @@ func (action *actionImpl) Test() int {
 
 	testURLSpeed := func(name, url string) {
 		wg.Add(1)
+		taskCh <- true
 		go func() {
 			res := internal.Fetch(url)
 			if res.IsTimeout {
@@ -226,8 +231,8 @@ func (action *actionImpl) Test() int {
 					logger.Error(log)
 				}
 			}
-
 			wg.Done()
+			<-taskCh
 		}()
 	}
 
