@@ -17,8 +17,20 @@ func IsUri(uri string) bool {
 }
 
 func PickArgs(args []string, ptr int) string {
-	if len(args) >= ptr {
+	if len(args) > ptr {
 		return args[ptr]
 	}
 	panic("Invalid ptr")
+}
+
+func Uniq(input []string) []string {
+	r := make([]string, 0, len(input))
+	bucket := make(map[string]bool)
+	for _, each := range input {
+		if _, v := bucket[each]; !v {
+			bucket[each] = true
+			r = append(r, each)
+		}
+	}
+	return r
 }

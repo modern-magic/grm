@@ -42,3 +42,11 @@ func TestPickArgs(t *testing.T) {
 	}
 
 }
+
+func TestUniq(t *testing.T) {
+	original := []string{"1", "2", "3", "3"}
+	latest := internal.Uniq(original)
+	if len(latest) != 3 {
+		t.Errorf("Expected: %s, Actual: %s", "'1','2','3'", latest)
+	}
+}

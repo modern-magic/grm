@@ -6,7 +6,6 @@ import (
 
 	"github.com/modern-magic/grm/internal"
 	"github.com/modern-magic/grm/internal/action"
-	"github.com/modern-magic/grm/internal/fs"
 	"github.com/modern-magic/grm/internal/logger"
 	"github.com/modern-magic/grm/internal/registry"
 )
@@ -53,48 +52,32 @@ func runImpl(args []string) int {
 		}
 	}
 
-	// initlize nrm & npm preset source.
-	fs := fs.NewFS()
-	sources := registry.NewRegistrySourceData(fs)
-	return parserSourceForRun(args, &sources, fs)
+	source := registry.NewSource()
+	return parserSourceForRun(args, source)
 }
 
-func parserSourceForRun(args []string, source *registry.RegistryDataSource, fs fs.FS) int {
+func parserSourceForRun(args []string, source registry.Source) int {
 
-	source.Keys = append(source.Keys, registry.GetPresetRegistryNames()...)
-	source.PresetKeys = append(source.PresetKeys, source.Keys...)
-	user := registry.NewUserResolver(fs)
-	user.Resolve()
-	for _, key := range registry.GetPresetRegistryNames() {
-		source.Registry[key] = registry.GetPresetRegistryInfo(key)
-	}
-
-	source.Keys = append(source.Keys, user.GetNames()...)
-
-	for _, key := range user.GetNames() {
-		home := user.GetRegistries()[key].Home
-		uri := user.GetRegistries()[key].Uri
-		source.Registry[key] = uri
-		source.Niave[key] = registry.RegsitryInfo{
-			Home: home,
-			Uri:  uri,
-		}
-	}
+	act := action.NewAction(action.ActionOptions{
+		Source:     source.GetSource(),
+		UserSource: source.GetUserSource(),
+		Args:       args,
+	})
 
 	for _, arg := range args {
 		switch arg {
 		case "ls":
-			return action.ShowSources(source)
+			return act.View(action.ViewOptions{All: true})
 		case "current":
-			return action.ShowCurrent()
+			return act.View(action.ViewOptions{All: false})
 		case "use":
-			return action.SetCurrent(source, args[1:])
+			return act.Use()
 		case "add":
-			return action.AddRegistry(source, args[1:])
+			return act.Join()
 		case "del":
-			return action.DelRegistry(source, args[1:])
+			return act.Drop()
 		case "test":
-			return action.FetchRegistry(source, args[1:])
+			return act.Test()
 		}
 	}
 	return 0
