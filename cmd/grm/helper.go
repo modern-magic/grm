@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/modern-magic/grm/internal"
@@ -10,20 +9,17 @@ import (
 	"github.com/modern-magic/grm/internal/registry"
 )
 
-var helperInfo = `Usage: Grm [options] [command]
+var helperText = `
+` + `Running version ` + grmVersion + `.` + `
 
-Options:
-  -v, --version                           Output the version number
-  -h, --help                              Output usage information
+Usage:
 
-Commands:
-  ls                                      List all the registries
-  current                                 Show current registry name
-  use  <name>                             Change registry to registry
-  test <name>                             Test response time for specific or all registries
-  add  <name> <registry> [home]           Add one custom registry
-  del  <name>                             Delete one custom registry by alias
-  help                                    Print this help
+    grm current                            : Display active registry name.
+    grm list                               : List the registry info. Aliased as ls.
+    grm test [name]                        : Test response time for specific or all registries.
+    grm add <name> <registry> [home]       : Add one custom registry.
+    grm del <name>                         : Delete one custom registry by alias.
+    grm version                            : Displays the current running version of grm. Aliased as v.
 `
 
 func Run() int {
@@ -34,7 +30,7 @@ func runImpl(args []string) int {
 
 	if len(args) == 0 {
 		logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
-			return fmt.Sprintf("%s%s%s", c.Cyan, helperInfo, c.Reset)
+			return helperText
 		})
 		return 0
 	}
@@ -43,11 +39,11 @@ func runImpl(args []string) int {
 		switch arg {
 		case "-h", "--help", "help":
 			logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
-				return fmt.Sprintf("%s%s%s", c.Cyan, helperInfo, c.Reset)
+				return helperText
 			})
 			return 0
 		case "-v", "--version", "version":
-			logger.Info(internal.StringJoin("[Grm]: version", grmVersion))
+			logger.Success(internal.StringJoin("[Grm]: version", grmVersion))
 			return 0
 		}
 	}
@@ -66,7 +62,7 @@ func parserSourceForRun(args []string, source registry.Source) int {
 
 	for _, arg := range args {
 		switch arg {
-		case "ls":
+		case "ls", "list":
 			return act.View(action.ViewOptions{All: true})
 		case "current":
 			return act.View(action.ViewOptions{All: false})
