@@ -15,6 +15,7 @@ var helperText = `
 Usage:
 
     grm current                            : Display active registry name.
+    grm use <name>                         : Use this registry.
     grm list                               : List the registry info. Aliased as ls.
     grm test [name]                        : Test response time for specific or all registries.
     grm add <name> <registry> [home]       : Add one custom registry.
