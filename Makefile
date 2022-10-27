@@ -84,5 +84,7 @@ compress-linux-arm64:
 
 
 msi:
-	cd scripts	&&	npm	i
+ifeq	($(OS),Windows_NT)
+	cd scripts
 	node scripts/windows-msi.js
+endif

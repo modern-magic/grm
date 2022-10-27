@@ -90,30 +90,35 @@ const buildImpl = async () => {
     // Unfortunately. I don't know much about WIX. I'm not ensure
     // After i run the candle command can pipe the result to light. (Because i'm not like so much disk IO, memory is enough)
     // If you find it can work with memory. PR welcome!
-
-    // await execa('tar', ['-zxvf', 'build/grm-windows-64.tar.gz', '-C', 'windows'])
-    //     await execa('candle.exe', [
-    //         '-o',
-    //         `${wintar}/app.wixobj`,
-    //         `${wintar}/app.wsx`,
-    //         '-arch',
-    //         'x64',
-    //         '-ext',
-    //         'WixUtilExtension',
-    //     ])
-    //     await execa('light.exe', [
-    //         `${wintar}/app.wixobj`,
-    //         '-o',
-    //         `${wintar}/grm-installer-64.msi`,
-    //         '-ext',
-    //         'WixUIExtension',
-    //         '-ext',
-    //         'WixUtilExtension',
-    //     ])
-    //     await fs.copy(`${wintar}/grm-installer-64.msi`, 'build/grm-installer-64.msi')
+    await execa('candle.exe', [
+        '-o',
+        `${WINDOW_DIRECOTRY}/app.wixobj`,
+        `${WINDOW_DIRECOTRY}/app.wsx`,
+        '-arch',
+        'x64',
+        '-ext',
+        'WixUtilExtension',
+    ])
+    await execa('light.exe', [
+        `${WINDOW_DIRECOTRY}/app.wixobj`,
+        '-o',
+        `${path.dirname(originalPath)}/grm-installer-64.msi`,
+        '-ext',
+        'WixUIExtension',
+        '-ext',
+        'WixUtilExtension',
+    ])
+    const pdb = path.join(defaultWd, 'build', 'grm-installer-64.wixpdb')
+    if (await exist(pdb)) await remove(pdb)
 }
 
 const main = () => {
+    // ensure current node version greater than 16.17.0
+    const [major, minor] = process.versions.node.split('.')
+    if (+major < 16 || (+major === 16 && +minor < 17)) {
+        console.error('Packing script is depend on version above 16.17.0.')
+        return 1
+    }
     if (os.platform() !== 'win32') {
         console.error("Can't run on platforms other than Windows.")
         return 1
