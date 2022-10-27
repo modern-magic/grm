@@ -1,84 +1,136 @@
-/**
- * Wix docs here: https://wixtoolset.org/documentation/tutorial/
- * GUID Generator: http://www.guidgen.com/
- * Author: Kanno
- * Time: 10/5/2022
- */
-const fs = require('fs-extra')
+// Hello, and welcome to view the genetor MSI script file.
+// Before you modify this file. I think we need these.
+// WIX document: https://wixtoolset.org/documentation/tutorial/
+// GUID Generator Tool: http://www.guidgen.com/
+// As you can see. Currently grm is using WIX wrapper binary file(Only x64)
+// But It's only just getting stared. PR welcome.
+// A Note. For build speed. And it's a very simple script We don't
+// need too much third party to do some easy thing.
+
+const fs = require('fs')
+const fsp = require('fs').promises
 const path = require('path')
-const execa = require('execa')
+const child_process = require('child_process')
 const os = require('os')
-const msiMetaData = require('./info.json')
-const pref_hooks = require('perf_hooks')
+const zlib = require('zlib')
 
-/**
- * We decide only provide x64 msi file for user.
- */
+const defaultWd = process.cwd()
+const WINDOW_DIRECOTRY = path.join(defaultWd, 'windows')
 
-const main = async () => {
+const exist = (path) =>
+    fsp
+        .access(path, fs.constants.F_OK)
+        .then(() => true)
+        .catch(() => false)
+
+const remove = (path) => fsp.rm(path, { recursive: true, force: true })
+
+const outputFile = async (file, data, option) => {
+    const dirPath = path.dirname(file)
+    if (!(await exist(path))) {
+        await fsp.mkdir(dirPath, { recursive: true })
+    }
+    await fsp.writeFile(file, data, option)
+}
+
+const execa = (command, argvs) => {
+    const cp = child_process.spawn(command, argvs, { stdio: ['inherit'], shell: true })
+    cp.on('exit', () => cp.kill('SIGHUP'))
+    return new Promise((resolve, reject) => {
+        cp.on('close', (code) => (code === 0 ? resolve() : reject()))
+        cp.on('error', reject)
+    })
+}
+
+const unzip = (file, to) => {
+    return new Promise((resolve, reject) => {
+        fs.createReadStream(file)
+            .pipe(zlib.createUnzip())
+            .pipe(fs.createWriteStream(to))
+            .on('close', resolve)
+            .on('error', reject)
+    })
+}
+
+const MSI_PLACEMENT = {
+    author: 'Modern Magic',
+    applicationName: 'Grm Windows',
+    upgradeCode: '5f25abbf-75c7-4847-91a7-d8ef0e823e95',
+    envId: 'GRM_HOME',
+    license: 'assets/LICENSE.rtf',
+    dialog: 'assets/UIDialog.bmp',
+    banner: 'assets/UIBanner.bmp',
+    buildSource: path.join(WINDOW_DIRECOTRY, 'grm.exe'),
+}
+
+const TPL_REG = /\{\{((?:.|\r?\n)+?)\}\}/g
+
+const buildImpl = async () => {
+    const verionTextPath = path.join(defaultWd, 'version.txt')
+    const originalPath = path.join(defaultWd, 'build', 'grm-windows-64.tar.gz')
+    const depsExist = await (await Promise.all([verionTextPath, originalPath].map((p) => exist(p)))).every(Boolean)
+    if (!depsExist) throw new Error("Can't find grm-windows-64.tar.gz or version.text. Please check it exist.")
+    const grmVersion = await fsp.readFile(verionTextPath, 'utf8')
+    const msiXMLPath = path.join(defaultWd, 'scripts', 'app.wsx.tmpl')
+    const msiXML = await fsp.readFile(msiXMLPath, 'utf8')
+    Reflect.set(MSI_PLACEMENT, 'version', grmVersion)
+    const injected = msiXML.replace(TPL_REG, (_, s) => {
+        if (Reflect.has(MSI_PLACEMENT, s)) return Reflect.get(MSI_PLACEMENT, s)
+        return _
+    })
+    await outputFile(path.join(WINDOW_DIRECOTRY, 'app.wsx'), injected, 'utf8')
     /**
-     * Process exit can't be use here. windows-msi will use in makefile. If
-     * we let the process break will affect the result of the makefile.
+     * the compiler step
+     * 1. Unzip the compressed package to windows directory
+     * 2. use WIX tools gnerator app.wixobj
+     *    First we should use candle
+     *    Then use light
      */
+    await unzip(originalPath, MSI_PLACEMENT.buildSource)
+    // Unfortunately. I don't know much about WIX. I'm not ensure
+    // After i run the candle command can pipe the result to light. (Because i'm not like so much disk IO, memory is enough)
+    // If you find it can work with memory. PR welcome!
+    await execa('candle.exe', [
+        '-o',
+        `${WINDOW_DIRECOTRY}/app.wixobj`,
+        `${WINDOW_DIRECOTRY}/app.wsx`,
+        '-arch',
+        'x64',
+        '-ext',
+        'WixUtilExtension',
+    ])
+    await execa('light.exe', [
+        `${WINDOW_DIRECOTRY}/app.wixobj`,
+        '-o',
+        `${path.dirname(originalPath)}/grm-installer-64.msi`,
+        '-ext',
+        'WixUIExtension',
+        '-ext',
+        'WixUtilExtension',
+    ])
+    const pdb = path.join(defaultWd, 'build', 'grm-installer-64.wixpdb')
+    if (await exist(pdb)) await remove(pdb)
+}
+
+const main = () => {
+    // ensure current node version greater than 16.17.0
+    const [major, minor] = process.versions.node.split('.')
+    if (+major < 16 || (+major === 16 && +minor < 17)) {
+        console.error('Packing script is depend on version above 16.17.0.')
+        return 1
+    }
     if (os.platform() !== 'win32') {
         console.error("Can't run on platforms other than Windows.")
         return 1
     }
-    const star = pref_hooks.performance.now()
-    const root = process.cwd()
-    const verPath = path.join(root, 'version.txt')
-    const packedPath = path.join(root, 'build', 'grm-windows-64.tar.gz')
-    try {
-        const noExist = [verPath, packedPath].map((p) => fs.existsSync(p)).some((p) => !p)
-        if (noExist) throw new Error("Can't find grm-windows-64.tar.gz or version.text. Please check it exist.")
-        const ver = await fs.readFile(verPath, 'utf-8')
-        const wingz = 'build/grm-windows-64.tar.gz'
-        const wintar = 'windows/grm-windows-64'
-        await fs.ensureDir(wintar)
-        const args = ['-zxvf', wingz, '-C', wintar]
-        await execa('tar', args)
 
-        const info = Object.assign({}, msiMetaData, { version: ver })
-
-        let msiTmpl = await fs.readFile(path.join(root, 'scripts', 'app.wsx.tmpl'), 'utf8')
-
-        Object.keys(info).forEach((c) => {
-            const reg = new RegExp(`{{.${c}}}`, 'g')
-            msiTmpl = msiTmpl.replace(reg, info[c])
+    buildImpl()
+        .catch((err) => {
+            console.error(err)
+            return 1
         })
-
-        const tpl = msiTmpl.replace('{{.buildSource}}', `${wintar}/grm.exe`)
-        fs.outputFileSync(path.join(root, wintar, 'app.wsx'), tpl, 'utf8')
-
-        await execa('candle.exe', [
-            '-o',
-            `${wintar}/app.wixobj`,
-            `${wintar}/app.wsx`,
-            '-arch',
-            'x64',
-            '-ext',
-            'WixUtilExtension',
-        ])
-        await execa('light.exe', [
-            `${wintar}/app.wixobj`,
-            '-o',
-            `${wintar}/grm-installer-64.msi`,
-            '-ext',
-            'WixUIExtension',
-            '-ext',
-            'WixUtilExtension',
-        ])
-        await fs.copy(`${wintar}/grm-installer-64.msi`, 'build/grm-installer-64.msi')
-    } catch (error) {
-        console.log(error)
-        process.exit(1)
-    } finally {
-        await fs.remove('windows')
-        const end = pref_hooks.performance.now() - star
-        console.log('\x1b[36m%s \x1b[36m\x1b[0m', `✨ genreator all msi installer use ${Math.ceil(end)}ms.\n`)
-    }
+        .finally(() => remove(WINDOW_DIRECOTRY))
 }
-
 if (require.main === module) {
     main()
 }
