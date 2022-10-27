@@ -30,6 +30,10 @@ We are using `golangci-lint`, So you need change your lint utils in your local d
 
 - In windows, you need install `GCC` to your local environment. And then find you installed directory and can fork `mingw32-make.exe` and rename it as `make.exe`. Then you can use make command.
 
+> Why my Makefile execution error
+
+- Before you run `make` in your shell. You need check your local environment already has `upx`. If you're winodows user you should need install extra [wixtools](https://wixtoolset.org/).
+
 > Why i use makefile can't generator msi?
 
 - Unfortunately, We try to use wix in linux system. But it can't support the new syntax. So we only allowed build msi with windows system.
