@@ -55,11 +55,7 @@ func runImpl(args []string) int {
 
 func parserSourceForRun(args []string, source registry.Source) int {
 
-	act := action.NewAction(action.ActionOptions{
-		Source:     source.GetSource(),
-		UserSource: source.GetUserSource(),
-		Args:       args,
-	})
+	act := action.NewAction(args)
 
 	for _, arg := range args {
 		switch arg {

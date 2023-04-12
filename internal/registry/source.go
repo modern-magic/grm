@@ -58,14 +58,9 @@ var PresetRegistry = map[string]RegsitryInfo{
 		Uri:      "https://r.cnpmjs.org/",
 		Internal: true,
 	},
-	PresetSourceName.TaoBao: {
+	PresetSourceName.NpmMirror: {
 		Home:     "https://npmmirror.com",
 		Uri:      "https://registry.npmmirror.com/",
-		Internal: true,
-	},
-	PresetSourceName.NpmMirror: {
-		Home:     "https://skimdb.npmjs.com/",
-		Uri:      "https://skimdb.npmjs.com/Registry/",
 		Internal: true,
 	},
 }

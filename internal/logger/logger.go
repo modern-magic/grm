@@ -17,6 +17,8 @@ type Colors struct {
 	Cyan    string
 	Magenta string
 	Yellow  string
+
+	DimCyan string
 }
 
 var TerminalColors = Colors{
@@ -31,6 +33,8 @@ var TerminalColors = Colors{
 	Cyan:    "\033[36m",
 	Magenta: "\033[35m",
 	Yellow:  "\033[33m",
+
+	DimCyan: "\033[90m",
 }
 
 func PrintTextWithColor(file *os.File, callback func(Colors) string) {
