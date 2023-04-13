@@ -30,7 +30,7 @@ func NewGrmIniParse(conf *GrmConfig) *GrmIni {
 	p := &GrmIni{
 		ini: ini.New(),
 	}
-	p.ini.LoadFile(conf.confPath)
+	p.ini.LoadFile(conf.ConfPath)
 	return p
 }
 
@@ -39,7 +39,7 @@ func (i *GrmIni) Set(k, v string) bool {
 		key: k,
 		val: v,
 	})
-	return i.ini.Err() != nil
+	return i.ini.Err() == nil
 }
 
 func (i *GrmIni) Get(k string) string {

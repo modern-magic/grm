@@ -6,7 +6,6 @@ import (
 	"github.com/modern-magic/grm/internal"
 	"github.com/modern-magic/grm/internal/action"
 	"github.com/modern-magic/grm/internal/logger"
-	"github.com/modern-magic/grm/internal/registry"
 )
 
 var helperText = `
@@ -49,14 +48,12 @@ func runImpl(args []string) int {
 		}
 	}
 
-	source := registry.NewSource()
-	return parserSourceForRun(args, source)
+	return parserSourceForRun(args)
 }
 
-func parserSourceForRun(args []string, source registry.Source) int {
+func parserSourceForRun(args []string) int {
 
 	act := action.NewAction(args)
-
 	for _, arg := range args {
 		switch arg {
 		case "ls", "list":
@@ -73,5 +70,6 @@ func parserSourceForRun(args []string, source registry.Source) int {
 			return act.Test()
 		}
 	}
+
 	return 0
 }
