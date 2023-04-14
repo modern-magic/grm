@@ -30,11 +30,6 @@ func (fs *fsImpl) MkDir(file string, option MakeDirectoryOptions) error {
 	return err
 }
 
-func (fs *fsImpl) ReadFile(file string) (string, error) {
-	buffer, err := os.ReadFile(file)
-	return string(buffer), err
-}
-
 func (fs *fsImpl) OuputFile(file string, content []byte) error {
 
 	dirName := path.Dir(file)
@@ -49,4 +44,8 @@ func (fs *fsImpl) OuputFile(file string, content []byte) error {
 	}
 	err = os.WriteFile(file, content, 0644)
 	return err
+}
+
+func (fs *fsImpl) Rm(file string) error {
+	return os.Remove(file)
 }

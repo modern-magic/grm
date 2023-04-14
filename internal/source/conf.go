@@ -95,7 +95,7 @@ func readConf(path, alias string, c chan string) {
 }
 
 type GrmConfig struct {
-	baseDir  string
+	BaseDir  string
 	ConfPath string
 	Paths    []string
 	files    []string // user conf
@@ -106,7 +106,7 @@ type GrmConfig struct {
 func NewGrmConf() *GrmConfig {
 
 	conf := &GrmConfig{
-		baseDir:  path.Join(fs.SystemPreffix, "grm"),
+		BaseDir:  path.Join(fs.SystemPreffix, "grm"),
 		ConfPath: path.Join(fs.SystemPreffix, ".npmrc"),
 	}
 	conf.parse = NewGrmIniParse(conf)
@@ -137,10 +137,10 @@ func (g *GrmConfig) GetCurrentConf() string {
 }
 
 func (g *GrmConfig) scanner() (aliases []string, files []string) {
-	if _, err := os.Stat(g.baseDir); os.IsNotExist(err) {
+	if _, err := os.Stat(g.BaseDir); os.IsNotExist(err) {
 		return nil, nil
 	}
-	fd, err := os.ReadDir(g.baseDir)
+	fd, err := os.ReadDir(g.BaseDir)
 	if err != nil {
 		return nil, nil
 	}
@@ -151,7 +151,7 @@ func (g *GrmConfig) scanner() (aliases []string, files []string) {
 		if !file.IsDir() {
 			aliases = append(aliases, file.Name())
 			b.Reset()
-			b.WriteString(g.baseDir)
+			b.WriteString(g.BaseDir)
 			b.WriteByte('/')
 			b.WriteString(file.Name())
 			files = append(files, b.String())

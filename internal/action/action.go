@@ -3,15 +3,15 @@ package action
 import (
 	"fmt"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/modern-magic/grm/internal/fs"
 	"github.com/modern-magic/grm/internal/logger"
 	"github.com/modern-magic/grm/internal/net"
+	"github.com/modern-magic/grm/internal/shell"
 	"github.com/modern-magic/grm/internal/source"
 )
-
-var MaxTestSpeedLimit = 5
 
 type ViewOptions struct {
 	All bool
@@ -37,10 +37,18 @@ func (action *actionImpl) currentPath() string {
 	return action.conf.GetCurrentPath()
 }
 
+func (action *actionImpl) isDefaultAlias(alias source.S) bool {
+	return alias != source.System
+}
+
+func (action *actionImpl) isAliasExists(alias string) bool {
+	_, userKey := action.conf.ScannerUserConf()
+	_, ok := userKey[alias]
+	return ok
+}
+
 func (action *actionImpl) View(option ViewOptions) int {
-
 	current := action.currentPath()
-
 	alias := ""
 	if s, ok := source.DefaultSource[current]; ok {
 		alias = s.String()
@@ -75,11 +83,82 @@ func (action *actionImpl) View(option ViewOptions) int {
 }
 
 func (action *actionImpl) Drop() int {
-	return 0
+	if len(action.args) < 2 {
+		logger.PrintTextWithColor(os.Stderr, func(c logger.Colors) string {
+			return fmt.Sprintf("%s%s%s\n", c.Red, "error: alias should be passed", c.Reset)
+		})
+		return 1
+	}
+	alias := action.args[1]
+	s := source.EnsureDefaultKey(alias)
+	if action.isDefaultAlias(s) {
+		logger.PrintTextWithColor(os.Stderr, func(c logger.Colors) string {
+			return fmt.Sprintf("%s%s%s\n", c.Red, "error: can't remove default source", c.Reset)
+		})
+		return 1
+	}
 
+	if !action.isAliasExists(alias) {
+		logger.PrintTextWithColor(os.Stderr, func(c logger.Colors) string {
+			return fmt.Sprintf("%s%s%s\n", c.Red, "error: can't found alias", c.Reset)
+		})
+		return 1
+	}
+	if !shell.MakeConfirm("Are you sure to remove the registry?") {
+		logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
+			return fmt.Sprintf("%s%s%s\n", c.Dim, "Operation canceled", c.Reset)
+		})
+		return 0
+	}
+	err := action.fs.Rm(path.Join(action.conf.BaseDir, alias))
+	if err != nil {
+		logger.PrintTextWithColor(os.Stderr, func(c logger.Colors) string {
+			return fmt.Sprintf("%s%s%s\n", c.Red, err, c.Reset)
+		})
+		return 1
+	}
+	logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
+		return fmt.Sprintf("%s%s%s\n", c.Green, "remove registry success", c.Reset)
+	})
+	return 0
 }
 
 func (action *actionImpl) Join() int {
+	if len(action.args) < 3 {
+		logger.PrintTextWithColor(os.Stderr, func(c logger.Colors) string {
+			return fmt.Sprintf("%s%s%s\n", c.Red, "error: registry should be passed", c.Reset)
+		})
+		return 1
+	}
+	alias := action.args[1]
+	s := source.EnsureDefaultKey(alias)
+	if action.isDefaultAlias(s) {
+		logger.PrintTextWithColor(os.Stderr, func(c logger.Colors) string {
+			return fmt.Sprintf("%s%s%s\n", c.Red, "error: can't be named the same as default", c.Reset)
+		})
+		return 1
+	}
+
+	_, userKey := action.conf.ScannerUserConf()
+	if _, ok := userKey[alias]; ok {
+		if !shell.MakeConfirm("The alias already exists. Do you want to modify it?") {
+			logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
+				return fmt.Sprintf("%s%s%s\n", c.Dim, "Operation canceled", c.Reset)
+			})
+			return 0
+		}
+	}
+	file := path.Join(action.conf.BaseDir, alias)
+	err := action.fs.OuputFile(file, []byte(action.args[2]))
+	if err != nil {
+		logger.PrintTextWithColor(os.Stderr, func(c logger.Colors) string {
+			return fmt.Sprintf("%s%s%s\n", c.Red, err, c.Reset)
+		})
+		return 1
+	}
+	logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
+		return fmt.Sprintf("%s%s%s\n", c.Green, "update new conf success", c.Reset)
+	})
 	return 0
 }
 
@@ -123,11 +202,10 @@ func (action *actionImpl) Test() int {
 	return 0
 }
 
-// Todo
 func (action *actionImpl) Use() int {
 
 	s := source.EnsureDefaultKey(action.args[1])
-	if s == source.System {
+	if !action.isDefaultAlias(s) {
 		return 0
 	}
 	path := source.DefaultKey[s]
