@@ -3,9 +3,11 @@ package action
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/modern-magic/grm/internal/fs"
 	"github.com/modern-magic/grm/internal/logger"
+	"github.com/modern-magic/grm/internal/net"
 	"github.com/modern-magic/grm/internal/source"
 )
 
@@ -82,9 +84,46 @@ func (action *actionImpl) Join() int {
 }
 
 func (action *actionImpl) Test() int {
+
+	userSoure, _ := action.conf.ScannerUserConf()
+	urls := make([]string, 0, len(userSoure)+len(source.DefaultSource))
+	for k := range source.DefaultSource {
+		urls = append(urls, k)
+
+	}
+	for k := range userSoure {
+		urls = append(urls, k)
+	}
+
+	current := action.currentPath()
+	net.MakeRequest(urls, func(r string) {
+		expr := strings.Split(r, "->") // url msg
+		url := expr[0]
+		msg := expr[1]
+		name := ""
+		var isDefault bool
+		if current == url {
+			isDefault = true
+		}
+		if alias, ok := source.DefaultSource[url]; ok {
+			name = alias.String()
+		} else {
+			if alias, ok := userSoure[url]; ok {
+				name = alias
+			}
+		}
+		if isDefault {
+			name = fmt.Sprintf("%s%s%s", logger.TerminalColors.Cyan, name, logger.TerminalColors.Reset)
+		}
+		logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
+			return fmt.Sprintf("* %s%s%s%s\n", c.Dim, name, msg, c.Reset)
+		})
+
+	})
 	return 0
 }
 
+// Todo
 func (action *actionImpl) Use() int {
 
 	s := source.EnsureDefaultKey(action.args[1])

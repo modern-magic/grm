@@ -119,6 +119,7 @@ func (g *GrmConfig) ListAllPath() {
 	list = append(list, SourceToString...)
 	list = append(list, aliases...)
 	g.files = files
+	g.aliases = aliases
 	g.Paths = list
 }
 
