@@ -71,18 +71,18 @@ func (s S) String() string {
 	return SourceToString[s]
 }
 
-func readConf(path, alias string, c chan string) {
+func readConf(path, alias string, c chan string) error {
 	f, err := os.Open(path)
 	if err != nil {
 		c <- ""
-		return
+		return err
 	}
 	defer f.Close()
 
 	data, err := mmap.Map(f, mmap.RDONLY, 0)
 	if err != nil {
 		c <- ""
-		return
+		return err
 	}
 	defer data.Unmap()
 
@@ -92,7 +92,7 @@ func readConf(path, alias string, c chan string) {
 	} else {
 		c <- ""
 	}
-	return
+	return err
 }
 
 type GrmConfig struct {
@@ -173,7 +173,10 @@ func (g *GrmConfig) ScannerUserConf() (source, key map[string]string) {
 	for pos, file := range g.files {
 		wg.Add(1)
 		go func(path string, pos int) {
-			readConf(path, g.aliases[pos], c)
+			err := readConf(path, g.aliases[pos], c)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to read config file: %v\n", err)
+			}
 			wg.Done()
 		}(file, pos)
 	}

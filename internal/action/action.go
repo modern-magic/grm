@@ -219,7 +219,11 @@ func (action *actionImpl) Use() int {
 			}
 			url = shell.MakePrompt(fmt.Sprintf("Enter registry address for %s: ", alias))
 			file := path.Join(action.conf.BaseDir, alias)
-			action.fs.OuputFile(file, []byte(url))
+			err := action.fs.OuputFile(file, []byte(url))
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to update config file: %v\n", err)
+				return 1
+			}
 		}
 	} else {
 		url = source.DefaultKey[s]
