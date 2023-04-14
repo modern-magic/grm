@@ -83,13 +83,13 @@ func (action *actionImpl) View(option ViewOptions) int {
 }
 
 func (action *actionImpl) Drop() int {
-	if len(action.args) < 2 {
+	if len(action.args) < 1 {
 		logger.PrintTextWithColor(os.Stderr, func(c logger.Colors) string {
 			return fmt.Sprintf("%s%s%s\n", c.Red, "error: alias should be passed", c.Reset)
 		})
 		return 1
 	}
-	alias := action.args[1]
+	alias := action.args[0]
 	s := source.EnsureDefaultKey(alias)
 	if action.isDefaultAlias(s) {
 		logger.PrintTextWithColor(os.Stderr, func(c logger.Colors) string {
@@ -124,13 +124,13 @@ func (action *actionImpl) Drop() int {
 }
 
 func (action *actionImpl) Join() int {
-	if len(action.args) < 3 {
+	if len(action.args) < 2 {
 		logger.PrintTextWithColor(os.Stderr, func(c logger.Colors) string {
 			return fmt.Sprintf("%s%s%s\n", c.Red, "error: registry should be passed", c.Reset)
 		})
 		return 1
 	}
-	alias := action.args[1]
+	alias := action.args[0]
 	s := source.EnsureDefaultKey(alias)
 	if action.isDefaultAlias(s) {
 		logger.PrintTextWithColor(os.Stderr, func(c logger.Colors) string {
@@ -149,7 +149,7 @@ func (action *actionImpl) Join() int {
 		}
 	}
 	file := path.Join(action.conf.BaseDir, alias)
-	err := action.fs.OuputFile(file, []byte(action.args[2]))
+	err := action.fs.OuputFile(file, []byte(action.args[1]))
 	if err != nil {
 		logger.PrintTextWithColor(os.Stderr, func(c logger.Colors) string {
 			return fmt.Sprintf("%s%s%s\n", c.Red, err, c.Reset)
@@ -204,7 +204,7 @@ func (action *actionImpl) Test() int {
 
 func (action *actionImpl) Use() int {
 
-	s := source.EnsureDefaultKey(action.args[1])
+	s := source.EnsureDefaultKey(action.args[0])
 	if !action.isDefaultAlias(s) {
 		return 0
 	}
