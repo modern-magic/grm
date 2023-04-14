@@ -1,0 +1,3 @@
+run:
+  skip-files:
+    - internal/source/conf.go
