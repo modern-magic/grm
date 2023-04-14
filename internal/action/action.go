@@ -53,9 +53,9 @@ func (action *actionImpl) View(option ViewOptions) int {
 	if s, ok := source.DefaultSource[current]; ok {
 		alias = s.String()
 	} else {
-		userSource, userKey := action.conf.ScannerUserConf()
+		userSource, _ := action.conf.ScannerUserConf()
 		if s, ok := userSource[current]; ok {
-			alias = userKey[s]
+			alias = s
 		}
 	}
 
@@ -203,17 +203,31 @@ func (action *actionImpl) Test() int {
 }
 
 func (action *actionImpl) Use() int {
-
-	s := source.EnsureDefaultKey(action.args[0])
+	alias := action.args[0]
+	s := source.EnsureDefaultKey(alias)
+	url := source.DefaultKey[source.Npm]
 	if !action.isDefaultAlias(s) {
-		return 0
+		_, userKey := action.conf.ScannerUserConf()
+		if v, ok := userKey[alias]; ok {
+			url = v
+		} else {
+			if !shell.MakeConfirm("This registry can't find. Do you want to add a new one?") {
+				logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
+					return fmt.Sprintf("%s%s%s\n", c.Dim, "Operation canceled", c.Reset)
+				})
+				return 0
+			}
+			url = shell.MakePrompt(fmt.Sprintf("Enter registry address for %s: ", alias))
+			file := path.Join(action.conf.BaseDir, alias)
+			action.fs.OuputFile(file, []byte(url))
+		}
+	} else {
+		url = source.DefaultKey[s]
 	}
-	path := source.DefaultKey[s]
-
 	logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
-		return fmt.Sprintf("%s%s%s%s\n", c.Dim, "Using registry", fmt.Sprintf("%s%s%s", c.Green, s, c.Reset), c.Reset)
+		return fmt.Sprintf("%s%s%s%s\n", c.Dim, "Using registry", fmt.Sprintf(" %s%s%s", c.Green, alias, c.Reset), c.Reset)
 	})
-	ok := action.conf.SetCurrentPath(path)
+	ok := action.conf.SetCurrentPath(url)
 	if ok {
 		err := action.fs.OuputFile(action.conf.ConfPath, []byte(action.conf.GetCurrentConf()))
 		if err == nil {

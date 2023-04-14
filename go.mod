@@ -2,12 +2,12 @@ module github.com/modern-magic/grm
 
 go 1.17
 
-require github.com/nonzzz/ini v0.0.0-20230411080322-c35417cee2f6
-
 require (
-	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
-	github.com/manifoldco/promptui v0.9.0 // indirect
+	github.com/manifoldco/promptui v0.9.0
+	github.com/nonzzz/ini v0.0.0-20230414084939-6d92cdc1bd80
 )
+
+require github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
 
 require (
 	github.com/edsrzf/mmap-go v1.1.0
