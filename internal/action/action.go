@@ -205,7 +205,7 @@ func (action *actionImpl) Test() int {
 func (action *actionImpl) Use() int {
 	alias := action.args[0]
 	s := source.EnsureDefaultKey(alias)
-	url := source.DefaultKey[source.Npm]
+	url := ""
 	if !action.isDefaultAlias(s) {
 		_, userKey := action.conf.ScannerUserConf()
 		if v, ok := userKey[alias]; ok {
