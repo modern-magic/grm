@@ -3,7 +3,6 @@ package main
 import (
 	"os"
 
-	"github.com/modern-magic/grm/internal"
 	"github.com/modern-magic/grm/internal/action"
 	"github.com/modern-magic/grm/internal/logger"
 )
@@ -43,7 +42,7 @@ func runImpl(args []string) int {
 			})
 			return 0
 		case "-v", "--version", "version":
-			logger.Success(internal.StringJoin("[Grm]: version", grmVersion))
+			// logger.Success(internal.StringJoin("[Grm]: version", grmVersion))
 			return 0
 		}
 	}

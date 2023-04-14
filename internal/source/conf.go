@@ -1,8 +1,14 @@
 package source
 
 import (
+	"bufio"
+	"fmt"
+	"os"
 	"path"
+	"strings"
+	"sync"
 
+	"github.com/edsrzf/mmap-go"
 	"github.com/modern-magic/grm/internal/fs"
 )
 
@@ -65,10 +71,35 @@ func (s S) String() string {
 	return SourceToString[s]
 }
 
+func readConf(path, alias string, c chan string) {
+	f, err := os.Open(path)
+	if err != nil {
+		c <- ""
+		return
+	}
+	defer f.Close()
+
+	data, err := mmap.Map(f, mmap.RDONLY, 0)
+	if err != nil {
+		c <- ""
+		return
+	}
+	defer data.Unmap()
+
+	scanner := bufio.NewScanner(os.NewFile(uintptr(f.Fd()), ""))
+	if scanner.Scan() {
+		c <- fmt.Sprintf("%s->%s", alias, scanner.Text())
+	} else {
+		c <- ""
+	}
+}
+
 type GrmConfig struct {
 	baseDir  string
 	ConfPath string
-	aliases  []string
+	Paths    []string
+	files    []string // user conf
+	aliases  []string // user alias
 	parse    *GrmIni
 }
 
@@ -82,25 +113,18 @@ func NewGrmConf() *GrmConfig {
 	return conf
 }
 
-func (g *GrmConfig) ListAllPath() []string {
-	dir := []string{}
-	list := make([]string, 0, len(dir)+len(SourceToString))
+func (g *GrmConfig) ListAllPath() {
+	aliases, files := g.scanner()
+	list := make([]string, 0, len(aliases)+len(SourceToString))
 	list = append(list, SourceToString...)
-	list = append(list, dir...)
-	g.aliases = list
-	return list
+	list = append(list, aliases...)
+	g.files = files
+	g.Paths = list
 }
 
 func (g *GrmConfig) GetCurrentPath() string {
 	g.parse.Get("registry")
 	return g.parse.Path
-}
-
-func (g *GrmConfig) GetCurrentAlias() string {
-	if g.parse.Path == "" {
-		return ""
-	}
-	return ""
 }
 
 func (g *GrmConfig) SetCurrentPath(target string) bool {
@@ -109,4 +133,63 @@ func (g *GrmConfig) SetCurrentPath(target string) bool {
 
 func (g *GrmConfig) GetCurrentConf() string {
 	return g.parse.ToString()
+}
+
+func (g *GrmConfig) scanner() (aliases []string, files []string) {
+	if _, err := os.Stat(g.baseDir); os.IsNotExist(err) {
+		return nil, nil
+	}
+	fd, err := os.ReadDir(g.baseDir)
+	if err != nil {
+		return nil, nil
+	}
+	var b strings.Builder
+	aliases = make([]string, 0, len(fd))
+	files = make([]string, 0, len(fd))
+	for _, file := range fd {
+		if !file.IsDir() {
+			aliases = append(aliases, file.Name())
+			b.Reset()
+			b.WriteString(g.baseDir)
+			b.WriteByte('/')
+			b.WriteString(file.Name())
+			files = append(files, b.String())
+		}
+	}
+	return aliases, files
+}
+
+func (g *GrmConfig) ScannerUserConf() (source, key map[string]string) {
+	if len(g.files) == 0 {
+		return nil, nil
+	}
+
+	source = make(map[string]string)
+	key = make(map[string]string)
+	var wg sync.WaitGroup
+	c := make(chan string)
+	for pos, file := range g.files {
+		wg.Add(1)
+		go func(path string, pos int) {
+			readConf(path, g.aliases[pos], c)
+			wg.Done()
+		}(file, pos)
+	}
+	go func() {
+		wg.Wait()
+		close(c)
+	}()
+
+	for line := range c {
+		if line == "" {
+			continue
+		}
+		expr := strings.Split(line, "->")
+		k := expr[0]
+		v := expr[1]
+		source[v] = k
+		key[k] = v
+	}
+
+	return source, key
 }
