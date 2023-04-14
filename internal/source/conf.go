@@ -71,18 +71,18 @@ func (s S) String() string {
 	return SourceToString[s]
 }
 
-func readConf(path, alias string, c chan string) {
+func readConf(path, alias string, c chan string) error {
 	f, err := os.Open(path)
 	if err != nil {
 		c <- ""
-		return
+		return nil
 	}
 	defer f.Close()
 
 	data, err := mmap.Map(f, mmap.RDONLY, 0)
 	if err != nil {
 		c <- ""
-		return
+		return nil
 	}
 	defer data.Unmap()
 
@@ -92,6 +92,7 @@ func readConf(path, alias string, c chan string) {
 	} else {
 		c <- ""
 	}
+	return nil
 }
 
 type GrmConfig struct {
