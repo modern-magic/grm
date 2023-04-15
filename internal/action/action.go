@@ -3,9 +3,9 @@ package action
 import (
 	"errors"
 	"fmt"
-	"net/url"
 	"os"
 	"path"
+	"regexp"
 	"strings"
 
 	"github.com/modern-magic/grm/internal/fs"
@@ -36,8 +36,9 @@ func NewAction(args []string) *actionImpl {
 }
 
 func verifyURL(s string) bool {
-	_, err := url.Parse(s)
-	return err == nil
+	pattern := `^(https?://)?([\w\d]+\.)+[\w\d]{2,}(/[\w\d]+)*(\?[\w\d&=]*)?(#\w*)?$`
+	match, _ := regexp.MatchString(pattern, s)
+	return match
 }
 
 func (action *actionImpl) currentPath() string {
@@ -156,10 +157,9 @@ func (action *actionImpl) Join() int {
 		}
 	}
 	// verify path is a right url.
-
 	if !verifyURL(action.args[1]) {
 		logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
-			return fmt.Sprintf("%s%s%s\n", c.Dim, "invalid url", c.Reset)
+			return fmt.Sprintf("%s%s%s\n", c.Red, "invalid url", c.Reset)
 		})
 		return 1
 	}
