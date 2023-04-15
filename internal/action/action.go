@@ -1,7 +1,9 @@
 package action
 
 import (
+	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -31,6 +33,11 @@ func NewAction(args []string) *actionImpl {
 	action.conf = source.NewGrmConf()
 	action.conf.ListAllPath()
 	return action
+}
+
+func verifyURL(s string) bool {
+	_, err := url.Parse(s)
+	return err == nil
 }
 
 func (action *actionImpl) currentPath() string {
@@ -106,7 +113,7 @@ func (action *actionImpl) Drop() int {
 	}
 	if !shell.MakeConfirm("Are you sure to remove the registry?") {
 		logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
-			return fmt.Sprintf("%s%s%s\n", c.Dim, "Operation canceled", c.Reset)
+			return fmt.Sprintf("%s%s%s\n", c.Dim, "process exit", c.Reset)
 		})
 		return 0
 	}
@@ -143,11 +150,20 @@ func (action *actionImpl) Join() int {
 	if _, ok := userKey[alias]; ok {
 		if !shell.MakeConfirm("The alias already exists. Do you want to modify it?") {
 			logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
-				return fmt.Sprintf("%s%s%s\n", c.Dim, "Operation canceled", c.Reset)
+				return fmt.Sprintf("%s%s%s\n", c.Dim, "process exit", c.Reset)
 			})
 			return 0
 		}
 	}
+	// verify path is a right url.
+
+	if !verifyURL(action.args[1]) {
+		logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
+			return fmt.Sprintf("%s%s%s\n", c.Dim, "invalid url", c.Reset)
+		})
+		return 1
+	}
+
 	file := path.Join(action.conf.BaseDir, alias)
 	err := action.fs.OuputFile(file, []byte(action.args[1]))
 	if err != nil {
@@ -213,15 +229,27 @@ func (action *actionImpl) Use() int {
 		} else {
 			if !shell.MakeConfirm("This registry can't find. Do you want to add a new one?") {
 				logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
-					return fmt.Sprintf("%s%s%s\n", c.Dim, "Operation canceled", c.Reset)
+					return fmt.Sprintf("%s%s%s\n", c.Dim, "process exit", c.Reset)
 				})
 				return 0
 			}
-			url = shell.MakePrompt(fmt.Sprintf("Enter registry address for %s: ", alias))
-			file := path.Join(action.conf.BaseDir, alias)
-			err := action.fs.OuputFile(file, []byte(url))
+			url, err := shell.MakePrompt(fmt.Sprintf("Enter registry address for %s: ", alias), func(input string) error {
+				if len(input) == 0 {
+					return errors.New("can't be empty")
+				}
+				if !verifyURL(input) {
+					return errors.New("invalid url")
+				}
+				return nil
+			})
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Failed to update config file: %v\n", err)
+				fmt.Fprintf(os.Stderr, "failed to update config file: %v\n", err)
+				return 1
+			}
+			file := path.Join(action.conf.BaseDir, alias)
+			err = action.fs.OuputFile(file, []byte(url))
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "failed to update config file: %v\n", err)
 				return 1
 			}
 		}
@@ -229,7 +257,7 @@ func (action *actionImpl) Use() int {
 		url = source.DefaultKey[s]
 	}
 	logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
-		return fmt.Sprintf("%s%s%s%s\n", c.Dim, "Using registry", fmt.Sprintf(" %s%s%s", c.Green, alias, c.Reset), c.Reset)
+		return fmt.Sprintf("%s%s%s%s\n", c.Dim, "using registry", fmt.Sprintf(" %s%s%s", c.Green, alias, c.Reset), c.Reset)
 	})
 	ok := action.conf.SetCurrentPath(url)
 	if ok {
@@ -238,6 +266,9 @@ func (action *actionImpl) Use() int {
 			return 0
 		}
 	}
+	logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
+		return fmt.Sprintf("%s%s%s\n", c.Red, "invalid error", c.Reset)
+	})
 	return 1
 
 }

@@ -1,7 +1,6 @@
 package shell
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -17,16 +16,11 @@ func MakeConfirm(msg string) bool {
 	return err == nil && strings.ToLower(result) == "y"
 }
 
-func MakePrompt(msg string) string {
+func MakePrompt(msg string, validate func(input string) error) (string, error) {
 	prompt := promptui.Prompt{
-		Label: msg,
-		Validate: func(input string) error {
-			if len(input) == 0 {
-				return errors.New("Can't be empty")
-			}
-			return nil
-		},
+		Label:    msg,
+		Validate: validate,
 	}
-	result, _ := prompt.Run()
-	return result
+	result, err := prompt.Run()
+	return result, err
 }
