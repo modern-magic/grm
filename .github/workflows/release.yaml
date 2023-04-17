@@ -9,6 +9,12 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
+      - names: Extra Changelog
+        run: |
+          CHANGELOG=$(awk -v ver=$(awk -F'"' '/"version": ".+"/{ print $4; exit; }' package.json) '/^## / { if (p) { exit }; if ($2 == ver) { p=1; next} } p' CHANGELOG.md)
+          echo "CHANGELOG<<EOF" >> $GITHUB_ENV
+          echo "$CHANGELOG" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - uses: actions/setup-go@v2
         with:
@@ -31,8 +37,8 @@ jobs:
 
       - name: Make All
         run: |
-         set Path=%Path%;C:\Program Files (x86)\WiX Toolset v3.11\bin\
-         mingw32-make
+          set Path=%Path%;C:\Program Files (x86)\WiX Toolset v3.11\bin\
+          mingw32-make
         shell: cmd
 
       - name: Create Github Release
