@@ -198,3 +198,14 @@ func (g *GrmConfig) ScannerUserConf() (source, key map[string]string) {
 
 	return source, key
 }
+
+func (g *GrmConfig) MergePaths(userConf map[string]string) map[string]string {
+	merged := make(map[string]string, len(userConf)+len(DefaultKey))
+	for k, v := range userConf {
+		merged[k] = v
+	}
+	for k, v := range DefaultKey {
+		merged[k.String()] = v
+	}
+	return merged
+}

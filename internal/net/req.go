@@ -9,7 +9,14 @@ import (
 	"github.com/modern-magic/grm/internal/logger"
 )
 
-func MakeRequest(urls []string, fn func(re string)) {
+type RequestMessage struct {
+	Err   error
+	Path  string
+	Alias string
+	Sec   string
+}
+
+func MakeRequest(urls map[string]string, fn func(message RequestMessage)) {
 	client := &http.Client{
 		Timeout: time.Second * 10,
 		Transport: &http.Transport{
@@ -18,15 +25,20 @@ func MakeRequest(urls []string, fn func(re string)) {
 		},
 	}
 	var wg sync.WaitGroup
-	results := make(chan string, len(urls))
-	for _, url := range urls {
+	results := make(chan RequestMessage, len(urls))
+	for alias, url := range urls {
 		wg.Add(1)
-		go func(url string) {
+		go func(alias, url string) {
 			defer wg.Done()
 			start := time.Now()
 			resp, err := client.Get(url)
 			if err != nil {
-				results <- fmt.Sprintf("%s-> (%v)", url, err)
+				results <- RequestMessage{
+					Err:   err,
+					Path:  "",
+					Alias: alias,
+					Sec:   "",
+				}
 				return
 			}
 			defer resp.Body.Close()
@@ -42,8 +54,13 @@ func MakeRequest(urls []string, fn func(re string)) {
 			if code >= 400 && code < 600 {
 				color = logger.TerminalColors.Red
 			}
-			results <- fmt.Sprintf("%s-> (%s)", url, fmt.Sprintf("%s%dms%s", color, duration.Milliseconds(), logger.TerminalColors.Reset))
-		}(url)
+			results <- RequestMessage{
+				Err:   nil,
+				Path:  url,
+				Alias: alias,
+				Sec:   fmt.Sprintf("%s%dms%s", color, duration.Milliseconds(), logger.TerminalColors.Reset),
+			}
+		}(alias, url)
 	}
 	maxConcurrent := 2
 	concurrent := make(chan struct{}, maxConcurrent)

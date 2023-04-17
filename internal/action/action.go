@@ -6,7 +6,6 @@ import (
 	"os"
 	"path"
 	"regexp"
-	"strings"
 
 	"github.com/modern-magic/grm/internal/fs"
 	"github.com/modern-magic/grm/internal/logger"
@@ -178,42 +177,41 @@ func (action *actionImpl) Join() int {
 	return 0
 }
 
+// Pick up should test path
 func (action *actionImpl) Test() int {
 
-	userSoure, _ := action.conf.ScannerUserConf()
-	urls := make([]string, 0, len(userSoure)+len(source.DefaultSource))
-	for k := range source.DefaultSource {
-		urls = append(urls, k)
+	aliases := action.args
+	_, keys := action.conf.ScannerUserConf()
+	urls := make(map[string]string, len(keys)+len(source.DefaultSource))
+	paths := action.conf.MergePaths(keys)
 
-	}
-	for k := range userSoure {
-		urls = append(urls, k)
+	if len(aliases) >= 1 {
+		for _, alias := range aliases {
+			if v, ok := paths[alias]; ok {
+				urls[alias] = v
+			}
+		}
+	} else {
+		urls = paths
 	}
 
 	current := action.currentPath()
-	net.MakeRequest(urls, func(r string) {
-		expr := strings.Split(r, "->") // url msg
-		url := expr[0]
-		msg := expr[1]
-		name := ""
+	net.MakeRequest(urls, func(message net.RequestMessage) {
+		if message.Err != nil {
+			fmt.Fprintf(os.Stderr, "failed with: %v\n", message.Err)
+			return
+		}
 		var isDefault bool
-		if current == url {
+		if message.Path == current {
 			isDefault = true
 		}
-		if alias, ok := source.DefaultSource[url]; ok {
-			name = alias.String()
-		} else {
-			if alias, ok := userSoure[url]; ok {
-				name = alias
-			}
-		}
+
 		if isDefault {
-			name = fmt.Sprintf("%s%s%s", logger.TerminalColors.Cyan, name, logger.TerminalColors.Reset)
+			message.Alias = fmt.Sprintf("%s%s%s", logger.TerminalColors.Cyan, message.Alias, logger.TerminalColors.Reset)
 		}
 		logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
-			return fmt.Sprintf("* %s%s%s%s\n", c.Dim, name, msg, c.Reset)
+			return fmt.Sprintf("* %s%s (%s)%s\n", c.Dim, message.Alias, message.Sec, c.Reset)
 		})
-
 	})
 	return 0
 }
