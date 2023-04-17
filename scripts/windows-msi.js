@@ -87,9 +87,8 @@ const buildImpl = async () => {
      *    Then use light
      */
     await unzip(originalPath, MSI_PLACEMENT.buildSource)
-    // Unfortunately. I don't know much about WIX. I'm not ensure
-    // After i run the candle command can pipe the result to light. (Because i'm not like so much disk IO, memory is enough)
-    // If you find it can work with memory. PR welcome!
+    // https://github.com/wixtoolset/wix3/blob/develop/src/tools/candle/candle.cs#L178-L186
+    // From wix v3 we can't write the result to the memory. So we have to do this.
     await execa('candle.exe', [
         '-o',
         `${WINDOW_DIRECOTRY}/app.wixobj`,

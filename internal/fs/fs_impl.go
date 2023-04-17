@@ -1,11 +1,8 @@
 package fs
 
 import (
-	"fmt"
 	"os"
 	"path"
-
-	"gopkg.in/yaml.v3"
 )
 
 type fsImpl struct {
@@ -33,11 +30,6 @@ func (fs *fsImpl) MkDir(file string, option MakeDirectoryOptions) error {
 	return err
 }
 
-func (fs *fsImpl) ReadFile(file string) (string, error) {
-	buffer, err := os.ReadFile(file)
-	return string(buffer), err
-}
-
 func (fs *fsImpl) OuputFile(file string, content []byte) error {
 
 	dirName := path.Dir(file)
@@ -54,30 +46,6 @@ func (fs *fsImpl) OuputFile(file string, content []byte) error {
 	return err
 }
 
-func (fs *fsImpl) ReadYAML(file string, out interface{}) (interface{}, error) {
-	ext := path.Ext(file)
-	if ext != ".yaml" && ext != ".yml" {
-		err := fmt.Errorf("%s%s%s\n", "Error with", file, "Please pass a yaml file.")
-		return err, err
-	}
-	_, err := os.Stat(file)
-	if err != nil {
-		if !os.IsExist(err) {
-			return nil, err
-		}
-	}
-	fileContent, err := fs.ReadFile(file)
-	if err != nil {
-		return nil, err
-	}
-	err = yaml.Unmarshal([]byte(fileContent), out)
-	return out, err
-}
-
-func (fs *fsImpl) WriteYAML(file string, content interface{}) error {
-	out, err := yaml.Marshal(content)
-	if err != nil {
-		return err
-	}
-	return fs.OuputFile(file, out)
+func (fs *fsImpl) Rm(file string) error {
+	return os.Remove(file)
 }
