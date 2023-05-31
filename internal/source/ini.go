@@ -1,25 +1,12 @@
 package source
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/nonzzz/ini"
 	"github.com/nonzzz/ini/pkg/ast"
 )
-
-type GrmIniVisitor struct {
-	key string
-	val string
-	ini.IniVisitor
-}
-
-func (v *GrmIniVisitor) Expression(node *ast.Expression) {
-	if node.Key == v.key {
-		if v.val == "" {
-			v.val = node.Value
-			return
-		}
-		node.Value = v.val
-	}
-}
 
 type GrmIni struct {
 	Path string
@@ -27,30 +14,38 @@ type GrmIni struct {
 }
 
 func NewGrmIniParse(conf *GrmConfig) *GrmIni {
-	p := &GrmIni{
-		ini: ini.New(),
-	}
-	p.ini.LoadFile(conf.ConfPath)
+	p := &GrmIni{}
+	i, _ := ini.New().LoadFile(conf.ConfPath)
+	p.ini = i
 	return p
 }
 
 func (i *GrmIni) Set(k, v string) bool {
-	i.ini.Accept(&GrmIniVisitor{
-		key: k,
-		val: v,
+	i.ini.Walk(func(node, _ ast.Node) {
+		switch t := node.(type) {
+		case *ast.ExpressionNode:
+			if t.Key == k {
+				t.Text = fmt.Sprintf("%s = %s", k, v)
+			}
+		}
 	})
-	return i.ini.Err() == nil
+	return true
 }
 
-func (i *GrmIni) Get(k string) string {
-	v := &GrmIniVisitor{
-		key: k,
-	}
-	i.ini.Accept(v)
-	i.Path = v.val
-	return v.val
+func (i *GrmIni) Get(k string) (val string) {
+	i.ini.Walk(func(node, _ ast.Node) {
+		switch t := node.(type) {
+		case *ast.ExpressionNode:
+			if t.Key == k {
+				val = strings.TrimSpace(t.Value)
+			}
+		}
+	})
+	i.Path = val
+	return val
 }
 
 func (i *GrmIni) ToString() string {
-	return i.ini.String()
+	s, _ := i.ini.Printer()
+	return s
 }

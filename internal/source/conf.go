@@ -17,24 +17,21 @@ type S uint8
 const (
 	Npm S = iota
 	Yarn
-	HuaWei
 	Tencent
 	NpmMirror
 	System
 )
 
 var DefaultSource = map[string]S{
-	"https://registry.npmjs.org/":                  Npm,
-	"https://registry.yarnpkg.com/":                Yarn,
-	"https://repo.huaweicloud.com/repository/npm/": HuaWei,
-	"https://mirrors.cloud.tencent.com/npm/":       Tencent,
-	"https://registry.npmmirror.com/":              NpmMirror,
+	"https://registry.npmjs.org/":            Npm,
+	"https://registry.yarnpkg.com/":          Yarn,
+	"https://mirrors.cloud.tencent.com/npm/": Tencent,
+	"https://registry.npmmirror.com/":        NpmMirror,
 }
 
 var DefaultKey = map[S]string{
 	Npm:       "https://registry.npmjs.org/",
 	Yarn:      "https://registry.yarnpkg.com/",
-	HuaWei:    "https://repo.huaweicloud.com/repository/npm/",
 	Tencent:   "https://mirrors.cloud.tencent.com/npm/",
 	NpmMirror: "https://registry.npmmirror.com/",
 }
@@ -46,8 +43,6 @@ func EnsureDefaultKey(input string) S {
 		s = Npm
 	case Yarn.String():
 		s = Yarn
-	case HuaWei.String():
-		s = HuaWei
 	case Tencent.String():
 		s = Tencent
 	case NpmMirror.String():
@@ -61,7 +56,6 @@ func EnsureDefaultKey(input string) S {
 var SourceToString = []string{
 	"npm",
 	"yarn",
-	"huawei",
 	"tencet",
 	"npmMirror",
 	"system",
