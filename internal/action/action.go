@@ -124,6 +124,17 @@ func (action *actionImpl) Drop() int {
 		})
 		return 1
 	}
+	// Set npm as default choose
+	ok := action.conf.SetCurrentPath(source.DefaultKey[source.Npm])
+	if ok {
+		err := action.fs.OuputFile(action.conf.ConfPath, []byte(action.conf.GetCurrentConf()))
+		if err != nil {
+			logger.PrintTextWithColor(os.Stderr, func(c logger.Colors) string {
+				return fmt.Sprintf("%s%s%s\n", c.Red, err, c.Reset)
+			})
+			return 1
+		}
+	}
 	logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
 		return fmt.Sprintf("%s%s%s\n", c.Green, "remove registry success", c.Reset)
 	})

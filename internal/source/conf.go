@@ -111,7 +111,11 @@ func NewGrmConf() *GrmConfig {
 func (g *GrmConfig) ListAllPath() {
 	aliases, files := g.scanner()
 	list := make([]string, 0, len(aliases)+len(SourceToString))
-	list = append(list, SourceToString...)
+	for _, s := range SourceToString {
+		if s != System.String() {
+			list = append(list, s)
+		}
+	}
 	list = append(list, aliases...)
 	g.files = files
 	g.aliases = aliases
