@@ -3,9 +3,9 @@ package action
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
-	"path"
-	"regexp"
+	"path/filepath"
 
 	"github.com/modern-magic/grm/internal/fs"
 	"github.com/modern-magic/grm/internal/logger"
@@ -13,6 +13,37 @@ import (
 	"github.com/modern-magic/grm/internal/shell"
 	"github.com/modern-magic/grm/internal/source"
 )
+
+func printAlias(s string) source.S {
+	return source.EnsureDefaultKey(s)
+}
+
+func isDefaultAlias(s string) (bool, source.S) {
+	alias := printAlias(s)
+	return alias != source.System, alias
+}
+
+func isDefaultPath(s string) (bool, source.S) {
+	alias, ok := source.DefaultSource[s]
+	if ok {
+		return true, alias
+	}
+	return false, source.System
+}
+
+func isDefault(i string, isPath bool) (s bool, alias source.S, source string) {
+	if isPath {
+		s, alias = isDefaultPath(i)
+		return s, alias, i
+	}
+	s, alias = isDefaultAlias(i)
+	return s, alias, i
+}
+
+func isURL(p string) bool {
+	_, err := url.Parse(p)
+	return err == nil
+}
 
 type ViewOptions struct {
 	All bool
@@ -34,56 +65,40 @@ func NewAction(args []string) *actionImpl {
 	return action
 }
 
-func verifyURL(s string) bool {
-	pattern := `^(https?://)?([\w\d]+\.)+[\w\d]{2,}(/[\w\d]+)*(\?[\w\d&=]*)?(#\w*)?$`
-	match, _ := regexp.MatchString(pattern, s)
-	return match
-}
-
 func (action *actionImpl) currentPath() string {
 	return action.conf.GetCurrentPath()
 }
 
-func (action *actionImpl) isDefaultAlias(alias source.S) bool {
-	return alias != source.System
-}
-
-func (action *actionImpl) isAliasExists(alias string) bool {
-	_, userKey := action.conf.ScannerUserConf()
-	_, ok := userKey[alias]
-	return ok
-}
-
 func (action *actionImpl) View(option ViewOptions) int {
-	current := action.currentPath()
-	alias := ""
-	if s, ok := source.DefaultSource[current]; ok {
-		alias = s.String()
-	} else {
-		userSource, _ := action.conf.ScannerUserConf()
-		if s, ok := userSource[current]; ok {
-			alias = s
+	cp := action.currentPath()
+	var c string
+	ok, alias, argvPath := isDefault(cp, true)
+	if !ok {
+		sources, _ := action.conf.ScannerUserConf()
+		if s, ok := sources[argvPath]; ok {
+			c = s
 		}
+	} else {
+		c = alias.String()
 	}
 
 	if !option.All {
 		logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
-			return fmt.Sprintf("%s%s%s\n", c.Dim, alias, c.Reset)
+			return fmt.Sprintf("%s%s%s\n", c.Dim, c, c.Reset)
 		})
 		return 0
 	}
 
-	for _, p := range action.conf.Paths {
-
-		if p == alias {
+	for _, s := range action.conf.Paths {
+		if s == c {
 			logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
-				return fmt.Sprintf("* %s%s%s%s\n", c.Cyan, p, fmt.Sprintf(" %s%s%s", c.DimCyan, "default", c.Reset), c.Reset)
+				return fmt.Sprintf("* %s%s%s%s\n", c.Cyan, s, fmt.Sprintf(" %s%s%s", c.DimCyan, "default", c.Reset), c.Reset)
 			})
-		} else {
-			logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
-				return fmt.Sprintf("* %s%s%s\n", c.Dim, p, c.Reset)
-			})
+			continue
 		}
+		logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
+			return fmt.Sprintf("* %s%s%s\n", c.Dim, s, c.Reset)
+		})
 	}
 
 	return 0
@@ -96,33 +111,47 @@ func (action *actionImpl) Drop() int {
 		})
 		return 1
 	}
-	alias := action.args[0]
-	s := source.EnsureDefaultKey(alias)
-	if action.isDefaultAlias(s) {
+	name := action.args[0]
+	ok, alias, argvName := isDefault(name, false)
+	if ok {
 		logger.PrintTextWithColor(os.Stderr, func(c logger.Colors) string {
-			return fmt.Sprintf("%s%s%s\n", c.Red, "error: can't remove default source", c.Reset)
+			return fmt.Sprintf("%s%s%s%s\n", c.Red, "error: can't remove default source", alias, c.Reset)
 		})
 		return 1
 	}
 
-	if !action.isAliasExists(alias) {
+	// user conf
+	files := action.conf.Files()
+	if _, ok = files[argvName]; !ok {
 		logger.PrintTextWithColor(os.Stderr, func(c logger.Colors) string {
 			return fmt.Sprintf("%s%s%s\n", c.Red, "error: can't found alias", c.Reset)
 		})
 		return 1
 	}
+
 	if !shell.MakeConfirm("Are you sure to remove the registry?") {
 		logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
 			return fmt.Sprintf("%s%s%s\n", c.Dim, "process exit", c.Reset)
 		})
 		return 0
 	}
-	err := action.fs.Rm(path.Join(action.conf.BaseDir, alias))
+	err := action.fs.Rm(filepath.Join(action.conf.BaseDir, argvName))
 	if err != nil {
 		logger.PrintTextWithColor(os.Stderr, func(c logger.Colors) string {
 			return fmt.Sprintf("%s%s%s\n", c.Red, err, c.Reset)
 		})
 		return 1
+	}
+	// Set npm as default choose
+	ok = action.conf.SetCurrentPath(source.DefaultKey[source.Npm])
+	if ok {
+		err := action.fs.OuputFile(action.conf.ConfPath, []byte(action.conf.GetCurrentConf()))
+		if err != nil {
+			logger.PrintTextWithColor(os.Stderr, func(c logger.Colors) string {
+				return fmt.Sprintf("%s%s%s\n", c.Red, err, c.Reset)
+			})
+			return 1
+		}
 	}
 	logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
 		return fmt.Sprintf("%s%s%s\n", c.Green, "remove registry success", c.Reset)
@@ -137,17 +166,17 @@ func (action *actionImpl) Join() int {
 		})
 		return 1
 	}
-	alias := action.args[0]
-	s := source.EnsureDefaultKey(alias)
-	if action.isDefaultAlias(s) {
+	name := action.args[0]
+	path := action.args[1]
+	ok, _, argvName := isDefault(name, false)
+	if ok {
 		logger.PrintTextWithColor(os.Stderr, func(c logger.Colors) string {
 			return fmt.Sprintf("%s%s%s\n", c.Red, "error: can't be named the same as default", c.Reset)
 		})
 		return 1
 	}
-
-	_, userKey := action.conf.ScannerUserConf()
-	if _, ok := userKey[alias]; ok {
+	files := action.conf.Files()
+	if _, ok := files[argvName]; ok {
 		if !shell.MakeConfirm("The alias already exists. Do you want to modify it?") {
 			logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
 				return fmt.Sprintf("%s%s%s\n", c.Dim, "process exit", c.Reset)
@@ -155,16 +184,16 @@ func (action *actionImpl) Join() int {
 			return 0
 		}
 	}
-	// verify path is a right url.
-	if !verifyURL(action.args[1]) {
+
+	if !isURL(path) {
 		logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
 			return fmt.Sprintf("%s%s%s\n", c.Red, "invalid url", c.Reset)
 		})
 		return 1
 	}
 
-	file := path.Join(action.conf.BaseDir, alias)
-	err := action.fs.OuputFile(file, []byte(action.args[1]))
+	fp := filepath.Join(action.conf.BaseDir, argvName)
+	err := action.fs.OuputFile(fp, []byte(path))
 	if err != nil {
 		logger.PrintTextWithColor(os.Stderr, func(c logger.Colors) string {
 			return fmt.Sprintf("%s%s%s\n", c.Red, err, c.Reset)
@@ -217,13 +246,21 @@ func (action *actionImpl) Test() int {
 }
 
 func (action *actionImpl) Use() int {
-	alias := action.args[0]
-	s := source.EnsureDefaultKey(alias)
-	url := ""
-	if !action.isDefaultAlias(s) {
-		_, userKey := action.conf.ScannerUserConf()
-		if v, ok := userKey[alias]; ok {
-			url = v
+	name := action.args[0]
+	var url string
+	ok, alias, argvName := isDefault(name, false)
+	if ok {
+		url = source.DefaultKey[alias]
+	} else {
+		files := action.conf.Files()
+		fp, ok := files[argvName]
+		if ok {
+			_url, err := source.ReadConf(fp)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "failed to update config file: %v\n", err)
+				return 1
+			}
+			url = _url
 		} else {
 			if !shell.MakeConfirm("This registry can't find. Do you want to add a new one?") {
 				logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
@@ -231,11 +268,11 @@ func (action *actionImpl) Use() int {
 				})
 				return 0
 			}
-			url, err := shell.MakePrompt(fmt.Sprintf("Enter registry address for %s: ", alias), func(input string) error {
+			_url, err := shell.MakePrompt(fmt.Sprintf("Enter registry address for %s: ", argvName), func(input string) error {
 				if len(input) == 0 {
 					return errors.New("can't be empty")
 				}
-				if !verifyURL(input) {
+				if !isURL(input) {
 					return errors.New("invalid url")
 				}
 				return nil
@@ -244,20 +281,19 @@ func (action *actionImpl) Use() int {
 				fmt.Fprintf(os.Stderr, "failed to update config file: %v\n", err)
 				return 1
 			}
-			file := path.Join(action.conf.BaseDir, alias)
-			err = action.fs.OuputFile(file, []byte(url))
+			url := _url
+			fp := filepath.Join(action.conf.BaseDir, argvName)
+			err = action.fs.OuputFile(fp, []byte(url))
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "failed to update config file: %v\n", err)
 				return 1
 			}
 		}
-	} else {
-		url = source.DefaultKey[s]
 	}
 	logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
-		return fmt.Sprintf("%s%s%s%s\n", c.Dim, "using registry", fmt.Sprintf(" %s%s%s", c.Green, alias, c.Reset), c.Reset)
+		return fmt.Sprintf("%s%s%s%s\n", c.Dim, "using registry", fmt.Sprintf(" %s%s%s", c.Green, argvName, c.Reset), c.Reset)
 	})
-	ok := action.conf.SetCurrentPath(url)
+	ok = action.conf.SetCurrentPath(url)
 	if ok {
 		err := action.fs.OuputFile(action.conf.ConfPath, []byte(action.conf.GetCurrentConf()))
 		if err == nil {
@@ -268,5 +304,4 @@ func (action *actionImpl) Use() int {
 		return fmt.Sprintf("%s%s%s\n", c.Red, "invalid error", c.Reset)
 	})
 	return 1
-
 }

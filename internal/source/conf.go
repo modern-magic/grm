@@ -2,13 +2,13 @@ package source
 
 import (
 	"bufio"
-	"fmt"
+	"errors"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"sync"
 
-	"github.com/edsrzf/mmap-go"
 	"github.com/modern-magic/grm/internal/fs"
 )
 
@@ -65,36 +65,38 @@ func (s S) String() string {
 	return SourceToString[s]
 }
 
-func readConf(path, alias string, c chan string) error {
+func readConf(path, alias string, c chan string) {
 	f, err := os.Open(path)
 	if err != nil {
-		c <- ""
-		return err
+		panic(err)
 	}
 	defer f.Close()
-
-	data, err := mmap.Map(f, mmap.RDONLY, 0)
-	if err != nil {
-		c <- ""
-		return err
-	}
-	defer data.Unmap()
-
-	scanner := bufio.NewScanner(os.NewFile(uintptr(f.Fd()), ""))
+	scanner := bufio.NewScanner(f)
+	sb := strings.Builder{}
+	sb.WriteString(alias)
+	sb.WriteString("->")
 	if scanner.Scan() {
-		c <- fmt.Sprintf("%s->%s", alias, scanner.Text())
-	} else {
-		c <- ""
+		sb.WriteString(scanner.Text())
+		c <- sb.String()
 	}
-	return err
+}
+
+func ReadConf(path string) (url string, err error) {
+	ch := make(chan string)
+	go readConf(path, "*", ch)
+	line := <-ch
+	expr := strings.Split(line, "->")
+	if len(expr) == 0 {
+		return url, errors.New("Internal Error")
+	}
+	return expr[1], nil
 }
 
 type GrmConfig struct {
 	BaseDir  string
 	ConfPath string
 	Paths    []string
-	files    []string // user conf
-	aliases  []string // user alias
+	files    map[string]string // user conf
 	parse    *GrmIni
 }
 
@@ -109,12 +111,17 @@ func NewGrmConf() *GrmConfig {
 }
 
 func (g *GrmConfig) ListAllPath() {
-	aliases, files := g.scanner()
-	list := make([]string, 0, len(aliases)+len(SourceToString))
-	list = append(list, SourceToString...)
-	list = append(list, aliases...)
+	files := g.scanner()
+	list := make([]string, 0, len(g.files)+len(SourceToString))
+	for _, s := range SourceToString {
+		if s != System.String() {
+			list = append(list, s)
+		}
+	}
+	for k := range files {
+		list = append(list, k)
+	}
 	g.files = files
-	g.aliases = aliases
 	g.Paths = list
 }
 
@@ -131,48 +138,39 @@ func (g *GrmConfig) GetCurrentConf() string {
 	return g.parse.ToString()
 }
 
-func (g *GrmConfig) scanner() (aliases []string, files []string) {
+func (g *GrmConfig) scanner() (files map[string]string) {
 	if _, err := os.Stat(g.BaseDir); os.IsNotExist(err) {
-		return nil, nil
+		return files
 	}
 	fd, err := os.ReadDir(g.BaseDir)
 	if err != nil {
-		return nil, nil
+		return files
 	}
-	var b strings.Builder
-	aliases = make([]string, 0, len(fd))
-	files = make([]string, 0, len(fd))
+	files = make(map[string]string, len(fd))
 	for _, file := range fd {
 		if !file.IsDir() {
-			aliases = append(aliases, file.Name())
-			b.Reset()
-			b.WriteString(g.BaseDir)
-			b.WriteByte('/')
-			b.WriteString(file.Name())
-			files = append(files, b.String())
+			n := file.Name()
+			p := filepath.Join(g.BaseDir, n)
+			files[n] = p
 		}
 	}
-	return aliases, files
+	return files
 }
 
 func (g *GrmConfig) ScannerUserConf() (source, key map[string]string) {
 	if len(g.files) == 0 {
 		return nil, nil
 	}
-
 	source = make(map[string]string)
 	key = make(map[string]string)
 	var wg sync.WaitGroup
 	c := make(chan string)
-	for pos, file := range g.files {
+	for name, file := range g.files {
 		wg.Add(1)
-		go func(path string, pos int) {
-			err := readConf(path, g.aliases[pos], c)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Failed to read config file: %v\n", err)
-			}
+		go func(path string, name string) {
+			readConf(path, name, c)
 			wg.Done()
-		}(file, pos)
+		}(file, name)
 	}
 	go func() {
 		wg.Wait()
@@ -202,4 +200,8 @@ func (g *GrmConfig) MergePaths(userConf map[string]string) map[string]string {
 		merged[k.String()] = v
 	}
 	return merged
+}
+
+func (g *GrmConfig) Files() map[string]string {
+	return g.files
 }
