@@ -2,13 +2,11 @@ package source
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"path"
 	"strings"
 	"sync"
 
-	"github.com/edsrzf/mmap-go"
 	"github.com/modern-magic/grm/internal/fs"
 )
 
@@ -65,28 +63,20 @@ func (s S) String() string {
 	return SourceToString[s]
 }
 
-func readConf(path, alias string, c chan string) error {
+func readConf(path, alias string, c chan string) {
 	f, err := os.Open(path)
 	if err != nil {
-		c <- ""
-		return err
+		panic(err)
 	}
 	defer f.Close()
-
-	data, err := mmap.Map(f, mmap.RDONLY, 0)
-	if err != nil {
-		c <- ""
-		return err
-	}
-	defer data.Unmap()
-
-	scanner := bufio.NewScanner(os.NewFile(uintptr(f.Fd()), ""))
+	scanner := bufio.NewScanner(f)
+	sb := strings.Builder{}
+	sb.WriteString(alias)
+	sb.WriteString("->")
 	if scanner.Scan() {
-		c <- fmt.Sprintf("%s->%s", alias, scanner.Text())
-	} else {
-		c <- ""
+		sb.WriteString(scanner.Text())
+		c <- sb.String()
 	}
-	return err
 }
 
 type GrmConfig struct {
@@ -163,7 +153,6 @@ func (g *GrmConfig) ScannerUserConf() (source, key map[string]string) {
 	if len(g.files) == 0 {
 		return nil, nil
 	}
-
 	source = make(map[string]string)
 	key = make(map[string]string)
 	var wg sync.WaitGroup
@@ -171,10 +160,7 @@ func (g *GrmConfig) ScannerUserConf() (source, key map[string]string) {
 	for pos, file := range g.files {
 		wg.Add(1)
 		go func(path string, pos int) {
-			err := readConf(path, g.aliases[pos], c)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Failed to read config file: %v\n", err)
-			}
+			readConf(path, g.aliases[pos], c)
 			wg.Done()
 		}(file, pos)
 	}

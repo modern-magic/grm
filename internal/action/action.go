@@ -3,9 +3,9 @@ package action
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"path"
-	"regexp"
 
 	"github.com/modern-magic/grm/internal/fs"
 	"github.com/modern-magic/grm/internal/logger"
@@ -13,6 +13,37 @@ import (
 	"github.com/modern-magic/grm/internal/shell"
 	"github.com/modern-magic/grm/internal/source"
 )
+
+func printAlias(s string) source.S {
+	return source.EnsureDefaultKey(s)
+}
+
+func isDefaultAlias(s string) (bool, string) {
+	alias := printAlias(s)
+	return alias != source.System, alias.String()
+}
+
+func isDefaultPath(s string) (bool, string) {
+	alias, ok := source.DefaultSource[s]
+	if ok {
+		return true, alias.String()
+	}
+	return false, source.System.String()
+}
+
+func isDefault(i string, isPath bool) (s bool, alias, source string) {
+	if isPath {
+		s, alias = isDefaultPath(i)
+		return s, alias, i
+	}
+	s, alias = isDefaultAlias(i)
+	return s, alias, i
+}
+
+func isURL(p string) bool {
+	_, err := url.Parse(p)
+	return err == nil
+}
 
 type ViewOptions struct {
 	All bool
@@ -34,34 +65,16 @@ func NewAction(args []string) *actionImpl {
 	return action
 }
 
-func verifyURL(s string) bool {
-	pattern := `^(https?://)?([\w\d]+\.)+[\w\d]{2,}(/[\w\d]+)*(\?[\w\d&=]*)?(#\w*)?$`
-	match, _ := regexp.MatchString(pattern, s)
-	return match
-}
-
 func (action *actionImpl) currentPath() string {
 	return action.conf.GetCurrentPath()
 }
 
-func (action *actionImpl) isDefaultAlias(alias source.S) bool {
-	return alias != source.System
-}
-
-func (action *actionImpl) isAliasExists(alias string) bool {
-	_, userKey := action.conf.ScannerUserConf()
-	_, ok := userKey[alias]
-	return ok
-}
-
 func (action *actionImpl) View(option ViewOptions) int {
-	current := action.currentPath()
-	alias := ""
-	if s, ok := source.DefaultSource[current]; ok {
-		alias = s.String()
-	} else {
-		userSource, _ := action.conf.ScannerUserConf()
-		if s, ok := userSource[current]; ok {
+	cp := action.currentPath()
+	ok, alias, source := isDefault(cp, true)
+	if !ok {
+		sources, _ := action.conf.ScannerUserConf()
+		if s, ok := sources[source]; ok {
 			alias = s
 		}
 	}
@@ -73,17 +86,16 @@ func (action *actionImpl) View(option ViewOptions) int {
 		return 0
 	}
 
-	for _, p := range action.conf.Paths {
-
-		if p == alias {
+	for _, s := range action.conf.Paths {
+		if s == alias {
 			logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
-				return fmt.Sprintf("* %s%s%s%s\n", c.Cyan, p, fmt.Sprintf(" %s%s%s", c.DimCyan, "default", c.Reset), c.Reset)
+				return fmt.Sprintf("* %s%s%s%s\n", c.Cyan, s, fmt.Sprintf(" %s%s%s", c.DimCyan, "default", c.Reset), c.Reset)
 			})
-		} else {
-			logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
-				return fmt.Sprintf("* %s%s%s\n", c.Dim, p, c.Reset)
-			})
+			continue
 		}
+		logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
+			return fmt.Sprintf("* %s%s%s\n", c.Dim, s, c.Reset)
+		})
 	}
 
 	return 0
@@ -96,21 +108,24 @@ func (action *actionImpl) Drop() int {
 		})
 		return 1
 	}
-	alias := action.args[0]
-	s := source.EnsureDefaultKey(alias)
-	if action.isDefaultAlias(s) {
+	name := action.args[0]
+	ok, _, alias := isDefault(name, false)
+	if ok {
 		logger.PrintTextWithColor(os.Stderr, func(c logger.Colors) string {
-			return fmt.Sprintf("%s%s%s\n", c.Red, "error: can't remove default source", c.Reset)
+			return fmt.Sprintf("%s%s%s%s\n", c.Red, "error: can't remove default source", alias, c.Reset)
 		})
 		return 1
 	}
 
-	if !action.isAliasExists(alias) {
+	// user conf
+	_, keys := action.conf.ScannerUserConf()
+	if _, ok := keys[alias]; !ok {
 		logger.PrintTextWithColor(os.Stderr, func(c logger.Colors) string {
 			return fmt.Sprintf("%s%s%s\n", c.Red, "error: can't found alias", c.Reset)
 		})
 		return 1
 	}
+
 	if !shell.MakeConfirm("Are you sure to remove the registry?") {
 		logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
 			return fmt.Sprintf("%s%s%s\n", c.Dim, "process exit", c.Reset)
@@ -124,8 +139,8 @@ func (action *actionImpl) Drop() int {
 		})
 		return 1
 	}
-	// Set npm as default choose
-	ok := action.conf.SetCurrentPath(source.DefaultKey[source.Npm])
+	// // Set npm as default choose
+	ok = action.conf.SetCurrentPath(source.DefaultKey[source.Npm])
 	if ok {
 		err := action.fs.OuputFile(action.conf.ConfPath, []byte(action.conf.GetCurrentConf()))
 		if err != nil {
@@ -148,44 +163,47 @@ func (action *actionImpl) Join() int {
 		})
 		return 1
 	}
-	alias := action.args[0]
-	s := source.EnsureDefaultKey(alias)
-	if action.isDefaultAlias(s) {
+	name := action.args[0]
+	path := action.args[1]
+	ok, alias, _ := isDefault(name, false)
+	if ok {
 		logger.PrintTextWithColor(os.Stderr, func(c logger.Colors) string {
 			return fmt.Sprintf("%s%s%s\n", c.Red, "error: can't be named the same as default", c.Reset)
 		})
 		return 1
 	}
+	// if
+	// _, key := action.conf.ScannerUserConf()
 
-	_, userKey := action.conf.ScannerUserConf()
-	if _, ok := userKey[alias]; ok {
-		if !shell.MakeConfirm("The alias already exists. Do you want to modify it?") {
-			logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
-				return fmt.Sprintf("%s%s%s\n", c.Dim, "process exit", c.Reset)
-			})
-			return 0
-		}
-	}
-	// verify path is a right url.
-	if !verifyURL(action.args[1]) {
-		logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
-			return fmt.Sprintf("%s%s%s\n", c.Red, "invalid url", c.Reset)
-		})
-		return 1
-	}
+	// _, userKey := action.conf.ScannerUserConf()
+	// if _, ok := userKey[alias]; ok {
+	// 	if !shell.MakeConfirm("The alias already exists. Do you want to modify it?") {
+	// 		logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
+	// 			return fmt.Sprintf("%s%s%s\n", c.Dim, "process exit", c.Reset)
+	// 		})
+	// 		return 0
+	// 	}
+	// }
+	// // verify path is a right url.
+	// if !verifyURL(action.args[1]) {
+	// 	logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
+	// 		return fmt.Sprintf("%s%s%s\n", c.Red, "invalid url", c.Reset)
+	// 	})
+	// 	return 1
+	// }
 
-	file := path.Join(action.conf.BaseDir, alias)
-	err := action.fs.OuputFile(file, []byte(action.args[1]))
-	if err != nil {
-		logger.PrintTextWithColor(os.Stderr, func(c logger.Colors) string {
-			return fmt.Sprintf("%s%s%s\n", c.Red, err, c.Reset)
-		})
-		return 1
-	}
-	logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
-		return fmt.Sprintf("%s%s%s\n", c.Green, "update new conf success", c.Reset)
-	})
-	return 0
+	// file := path.Join(action.conf.BaseDir, alias)
+	// err := action.fs.OuputFile(file, []byte(action.args[1]))
+	// if err != nil {
+	// 	logger.PrintTextWithColor(os.Stderr, func(c logger.Colors) string {
+	// 		return fmt.Sprintf("%s%s%s\n", c.Red, err, c.Reset)
+	// 	})
+	// 	return 1
+	// }
+	// logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
+	// 	return fmt.Sprintf("%s%s%s\n", c.Green, "update new conf success", c.Reset)
+	// })
+	// return 0
 }
 
 // Pick up should test path
