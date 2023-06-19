@@ -2,8 +2,10 @@ package source
 
 import (
 	"bufio"
+	"errors"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -79,12 +81,22 @@ func readConf(path, alias string, c chan string) {
 	}
 }
 
+func ReadConf(path string) (url string, err error) {
+	ch := make(chan string)
+	go readConf(path, "*", ch)
+	line := <-ch
+	expr := strings.Split(line, "->")
+	if len(expr) == 0 {
+		return url, errors.New("Internal Error")
+	}
+	return expr[1], nil
+}
+
 type GrmConfig struct {
 	BaseDir  string
 	ConfPath string
 	Paths    []string
-	files    []string // user conf
-	aliases  []string // user alias
+	files    map[string]string // user conf
 	parse    *GrmIni
 }
 
@@ -99,16 +111,17 @@ func NewGrmConf() *GrmConfig {
 }
 
 func (g *GrmConfig) ListAllPath() {
-	aliases, files := g.scanner()
-	list := make([]string, 0, len(aliases)+len(SourceToString))
+	files := g.scanner()
+	list := make([]string, 0, len(g.files)+len(SourceToString))
 	for _, s := range SourceToString {
 		if s != System.String() {
 			list = append(list, s)
 		}
 	}
-	list = append(list, aliases...)
+	for k := range files {
+		list = append(list, k)
+	}
 	g.files = files
-	g.aliases = aliases
 	g.Paths = list
 }
 
@@ -125,28 +138,23 @@ func (g *GrmConfig) GetCurrentConf() string {
 	return g.parse.ToString()
 }
 
-func (g *GrmConfig) scanner() (aliases []string, files []string) {
+func (g *GrmConfig) scanner() (files map[string]string) {
 	if _, err := os.Stat(g.BaseDir); os.IsNotExist(err) {
-		return nil, nil
+		return files
 	}
 	fd, err := os.ReadDir(g.BaseDir)
 	if err != nil {
-		return nil, nil
+		return files
 	}
-	var b strings.Builder
-	aliases = make([]string, 0, len(fd))
-	files = make([]string, 0, len(fd))
+	files = make(map[string]string, len(fd))
 	for _, file := range fd {
 		if !file.IsDir() {
-			aliases = append(aliases, file.Name())
-			b.Reset()
-			b.WriteString(g.BaseDir)
-			b.WriteByte('/')
-			b.WriteString(file.Name())
-			files = append(files, b.String())
+			n := file.Name()
+			p := filepath.Join(g.BaseDir, n)
+			files[n] = p
 		}
 	}
-	return aliases, files
+	return files
 }
 
 func (g *GrmConfig) ScannerUserConf() (source, key map[string]string) {
@@ -157,12 +165,12 @@ func (g *GrmConfig) ScannerUserConf() (source, key map[string]string) {
 	key = make(map[string]string)
 	var wg sync.WaitGroup
 	c := make(chan string)
-	for pos, file := range g.files {
+	for name, file := range g.files {
 		wg.Add(1)
-		go func(path string, pos int) {
-			readConf(path, g.aliases[pos], c)
+		go func(path string, name string) {
+			readConf(path, name, c)
 			wg.Done()
-		}(file, pos)
+		}(file, name)
 	}
 	go func() {
 		wg.Wait()
@@ -192,4 +200,8 @@ func (g *GrmConfig) MergePaths(userConf map[string]string) map[string]string {
 		merged[k.String()] = v
 	}
 	return merged
+}
+
+func (g *GrmConfig) Files() map[string]string {
+	return g.files
 }
