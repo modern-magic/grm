@@ -83,8 +83,8 @@ func (action *actionImpl) View(option ViewOptions) int {
 	}
 
 	if !option.All {
-		logger.PrintTextWithColor(os.Stdout, func(c logger.Colors) string {
-			return fmt.Sprintf("%s%s%s\n", c.Dim, c, c.Reset)
+		logger.PrintTextWithColor(os.Stdout, func(color logger.Colors) string {
+			return fmt.Sprintf("%s%s%s\n", color.Dim, c, color.Reset)
 		})
 		return 0
 	}

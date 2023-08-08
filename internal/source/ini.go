@@ -1,48 +1,41 @@
 package source
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/nonzzz/ini"
-	"github.com/nonzzz/ini/pkg/ast"
 )
 
 type GrmIni struct {
-	Path string
-	ini  *ini.Ini
+	Path     string
+	ini      *ini.Ini
+	selector ini.Selector
 }
 
 func NewGrmIniParse(conf *GrmConfig) *GrmIni {
 	p := &GrmIni{}
 	i, _ := ini.New().LoadFile(conf.ConfPath)
 	p.ini = i
+	p.selector = ini.NewSelector(p.ini)
 	return p
 }
 
 func (i *GrmIni) Set(k, v string) bool {
-	i.ini.Walk(func(node, _ ast.Node) {
-		switch t := node.(type) {
-		case *ast.ExpressionNode:
-			if t.Key == k {
-				t.Text = fmt.Sprintf("%s = %s", k, v)
-			}
-		}
+	op := i.selector.Query(k, ini.ExpressionKind)
+	_, err := op.Get()
+	if err != nil {
+		return false
+	}
+	return op.Set(ini.AttributeBindings{
+		Text: v,
 	})
-	return true
 }
 
-func (i *GrmIni) Get(k string) (val string) {
-	i.ini.Walk(func(node, _ ast.Node) {
-		switch t := node.(type) {
-		case *ast.ExpressionNode:
-			if t.Key == k {
-				val = strings.TrimSpace(t.Value)
-			}
-		}
-	})
-	i.Path = val
-	return val
+func (i *GrmIni) Get(k string) {
+	op := i.selector.Query(k, ini.ExpressionKind)
+	expr, err := op.Get()
+	if err != nil {
+		return
+	}
+	i.Path = expr.Attribute().Value
 }
 
 func (i *GrmIni) ToString() string {
